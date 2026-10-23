@@ -163,6 +163,23 @@ Each repository has one agent session, started by the owner and named after the 
 - A red `main` is fixed before any other work.
 - Commits and pull requests carry no `Co-Authored-By`, "Generated with", model or session lines.
 
+## Continuous integration
+
+A repository's `ci.yml` lists what to check; the organization's reusable workflows say how. A C or C++ repository builds through CMake presets, so CI and a local build run the same commands.
+
+- **Presets.** `CMakePresets.json` defines, for every CI cell, a configure, a build and a test preset of the same name, with the binary directory `out/<preset>` and the test timeout. `tools/check.sh` runs the same presets locally.
+- **Toolchain.** Linux cells run in the organization's CI image, `ghcr.io/rawframe-project/ci-cpp:<YYYY.MM.N>`, built from `.github/ci/cpp`: compilers, build tools and the libraries the families link, with nothing installed during the run. A repository takes a new image with the next pin of the reusable workflow, never all at once. macOS and Windows cells use the runner's own toolchain.
+- **One workflow per cell.** Each matrix cell calls `cpp.yml` with its preset and runner. Jobs other than builds (format, static analysis, generated files, size reports) stay in the repository's own `ci.yml`, in the same image.
+- **Caches.** ccache and the Mesa shader cache are restored for every run and saved only from `main`, so pull requests start warm and never overwrite each other. No job installs packages it could take from the image.
+- **Changed files.** The first job calls `changes.yml`; a pull request that changes only documentation skips the builds.
+- **One required check.** The last job, `required`, runs `if: always()`, needs every other job, and fails if any needed job failed or was cancelled; a job skipped by `changes` counts as passed. The ruleset requires only `required` and `title / title`, so renaming or adding a cell never touches the ruleset.
+- **Concurrency.** A new push to a pull request cancels its running CI. Runs on `main` are never cancelled.
+- **New tests repeat.** One sanitizer cell sets `repeat: 3`: on pull requests every test runs up to three times until it fails, so a flaky test fails before it merges.
+- **Workflow hygiene.** Every workflow sets `permissions: {}` at the top and grants each job what it needs, sets `defaults.run.shell: bash` (so a failing command anywhere in a pipeline fails the step), checks out with `persist-credentials: false`, and passes event data to scripts only through `env`. `zizmor.yml` audits every workflow on each pull request.
+- **Pull request gate.** `pr-gate.yml` runs on `pull_request_target` and closes a pull request from outside the organization unless it closes an issue labeled `accepted`. It never checks out the pull request's code.
+- **Failures.** A failed test cell uploads its ctest logs for a week. A failure on `main` is reported to the manager and fixed before other work.
+- **Runners.** GitHub-hosted runners, free for public repositories. A larger or paid runner needs a measurement that the budget cannot be met without it.
+
 ## Security and supply chain
 
 - Every action in a workflow is pinned by commit SHA with its version in a comment, and `.github/dependabot.yml` keeps the pins current (the `github-actions` ecosystem, weekly, grouped).
@@ -225,3 +242,4 @@ A repository moves to this standard in one pull request, or for a large reposito
 - Anthropic, [Effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents) and [Building a C compiler with parallel Claudes](https://www.anthropic.com/engineering/building-c-compiler): one task per session, structured progress, startup checks, work split so agents do not collide.
 - Repositories read: [t3code](https://github.com/pingdotgg/t3code), [Ghostty](https://github.com/ghostty-org/ghostty) (AGENTS.md, AI_POLICY.md), [Bun](https://github.com/oven-sh/bun) (AGENTS.md, REVIEW.md), [Zed](https://github.com/zed-industries/zed), [opencode](https://github.com/sst/opencode).
 - [Diataxis](https://diataxis.fr/) for separating tutorials, how-to guides, reference and explanation.
+- CI workflows read: [Ladybird](https://github.com/LadybirdBrowser/ladybird) (a pinned CI image, one reusable workflow per preset, ccache saved from the main branch, repeated new tests), [uv](https://github.com/astral-sh/uv) (a planning job, one aggregate required check, zizmor), [t3code](https://github.com/pingdotgg/t3code) and [Ghostty](https://github.com/ghostty-org/ghostty) (changed-files detection, contributor gates), [Bevy](https://github.com/bevyengine/bevy) (cache warming, safe `workflow_run` comments), [oxc](https://github.com/oxc-project/oxc) and [DuckDB](https://github.com/duckdb/duckdb).

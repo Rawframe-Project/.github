@@ -1,0 +1,50 @@
+# Tells a repository's CI whether a pull request changes anything beyond
+# documentation, so a docs-only change skips the builds and finishes within
+# the changed-files budget. Pushes and scheduled runs always count as code.
+# It reads the pull request's file list through the API, without a checkout.
+#
+#   jobs:
+#     changes:
+#       uses: Rawframe-Project/.github/.github/workflows/changes.yml@<sha> # main
+#       permissions:
+#         pull-requests: read
+#     build:
+#       needs: changes
+#       if: needs.changes.outputs.code == 'true'
+name: changes
+
+on:
+  workflow_call:
+    inputs:
+      docs:
+        description: Extended regular expression of the paths that are documentation only.
+        type: string
+        default: '^(docs/|\.github/ISSUE_TEMPLATE/)|\.md$'
+    outputs:
+      code:
+        description: '"true" when anything beyond documentation changed.'
+        value: ${{ jobs.changes.outputs.code }}
+
+permissions: {}
+
+jobs:
+  changes:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    permissions:
+      pull-requests: read
+    outputs:
+      code: ${{ steps.detect.outputs.code }}
+    steps:
+      - id: detect
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          NUMBER: ${{ github.event.pull_request.number }}
+          DOCS: ${{ inputs.docs }}
+        run: |
+          if [ -z "$NUMBER" ]; then echo "code=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          files=$(gh api --paginate "repos/$REPO/pulls/$NUMBER/files" --jq '.[].filename')
+          if grep -qvE "$DOCS" <<<"$files"; then code=true; else code=false; fi
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          echo "code changed: $code"

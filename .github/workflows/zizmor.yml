@@ -1,0 +1,30 @@
+# Audits the calling repository's workflows with zizmor: template
+# injection, credentials left in checkouts, excessive permissions, unpinned
+# actions and the other GitHub Actions pitfalls. A finding fails the job and
+# is annotated on the pull request.
+#
+#   jobs:
+#     zizmor:
+#       uses: Rawframe-Project/.github/.github/workflows/zizmor.yml@<sha> # main
+name: zizmor
+
+on:
+  workflow_call:
+
+permissions: {}
+
+jobs:
+  zizmor:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: zizmorcore/zizmor-action@cc914d7f3750a2d13d75c7f184a1060aa0e9d482 # v0.6.4
+        with:
+          version: 1.30.1
+          advanced-security: false
+          annotations: true

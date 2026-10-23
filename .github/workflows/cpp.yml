@@ -1,0 +1,143 @@
+# Builds and tests one CMake preset: the configure, build and test presets
+# of that name, with the binary directory out/<preset>. On Linux it runs in
+# the organization's CI image, so every repository builds with the same
+# pinned toolchain; macOS and Windows use the runner's own. ccache and the
+# Mesa shader cache are restored on every run and saved only from main, so a
+# pull request starts from main's latest build and never writes over it.
+#
+#   jobs:
+#     build:
+#       strategy:
+#         fail-fast: false
+#         matrix:
+#           include:
+#             - { preset: linux-clang-asan, repeat: 3 }
+#             - { preset: linux-gcc }
+#             - { preset: windows-clang-cl, runner: windows-2025 }
+#       uses: Rawframe-Project/.github/.github/workflows/cpp.yml@<sha> # main
+#       with:
+#         preset: ${{ matrix.preset }}
+#         runner: ${{ matrix.runner || 'ubuntu-24.04' }}
+#         repeat: ${{ matrix.repeat || 1 }}
+#
+# Pin it by commit like any action. A new CI image arrives with a new pin.
+name: cpp
+
+on:
+  workflow_call:
+    inputs:
+      preset:
+        description: The configure, build and test preset to run.
+        required: true
+        type: string
+      runner:
+        description: The runner label.
+        type: string
+        default: ubuntu-24.04
+      test:
+        description: Run the test preset after the build.
+        type: boolean
+        default: true
+      repeat:
+        description: >-
+          On a pull request, run each test up to this many times until it
+          fails, so a flaky test in the change fails before it merges.
+        type: number
+        default: 1
+      setup:
+        description: Shell commands to run before configuring, for what the image lacks.
+        type: string
+        default: ""
+      timeout:
+        description: The job's timeout in minutes.
+        type: number
+        default: 20
+
+permissions: {}
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  CCACHE_MAXSIZE: 2G
+  CTEST_OUTPUT_ON_FAILURE: "1"
+
+jobs:
+  preset:
+    name: ${{ inputs.preset }}
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: ${{ inputs.timeout }}
+    # The CI image; a new version is a new pin of this workflow.
+    container: ${{ startsWith(inputs.runner, 'ubuntu') && 'ghcr.io/rawframe-project/ci-cpp:2026.10.1' || null }}
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Inside the container the workspace has another path than the
+      # runner's github.workspace, so the cache folders are set here.
+      - name: Environment
+        run: |
+          echo "CCACHE_DIR=$GITHUB_WORKSPACE/.cache/ccache" >> "$GITHUB_ENV"
+          echo "CCACHE_BASEDIR=$GITHUB_WORKSPACE" >> "$GITHUB_ENV"
+          echo "MESA_SHADER_CACHE_DIR=$GITHUB_WORKSPACE/.cache/mesa" >> "$GITHUB_ENV"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Restore caches
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache
+          key: build-${{ inputs.runner }}-${{ inputs.preset }}-${{ github.sha }}
+          restore-keys: build-${{ inputs.runner }}-${{ inputs.preset }}-
+
+      - name: Setup
+        if: inputs.setup != ''
+        env:
+          SETUP: ${{ inputs.setup }}
+        run: eval "$SETUP"
+
+      - name: Configure
+        env:
+          PRESET: ${{ inputs.preset }}
+        run: |
+          if command -v ccache >/dev/null; then
+            export CMAKE_C_COMPILER_LAUNCHER=ccache CMAKE_CXX_COMPILER_LAUNCHER=ccache
+            ccache --zero-stats >/dev/null
+          fi
+          cmake --preset "$PRESET"
+
+      - name: Build
+        env:
+          PRESET: ${{ inputs.preset }}
+        run: |
+          cmake --build --preset "$PRESET"
+          if command -v ccache >/dev/null; then ccache --show-stats; fi
+
+      - name: Test
+        if: inputs.test
+        env:
+          PRESET: ${{ inputs.preset }}
+          REPEAT: ${{ github.event_name == 'pull_request' && inputs.repeat || 1 }}
+        run: |
+          repeat=()
+          [ "$REPEAT" -gt 1 ] && repeat=(--repeat "until-fail:$REPEAT")
+          ctest --preset "$PRESET" --no-tests=error "${repeat[@]}"
+
+      - name: Test logs
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: logs-${{ inputs.preset }}
+          path: out/${{ inputs.preset }}/Testing/Temporary/
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Save caches
+        if: always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache
+          key: build-${{ inputs.runner }}-${{ inputs.preset }}-${{ github.sha }}

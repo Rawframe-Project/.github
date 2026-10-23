@@ -1,0 +1,103 @@
+# Builds the C and C++ CI image from ci/cpp and publishes it to
+# ghcr.io/rawframe-project/ci-cpp:<VERSION> from main. A pull request builds
+# it without publishing, and the weekly run shows breakage in the image's
+# inputs before a version bump needs them.
+name: ci-image
+
+on:
+  pull_request:
+    paths: [ci/cpp/**, .github/workflows/ci-image.yml]
+  push:
+    branches: [main]
+    paths: [ci/cpp/**, .github/workflows/ci-image.yml]
+  schedule:
+    - cron: "23 3 * * 1"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: ci-image-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  IMAGE: ghcr.io/rawframe-project/ci-cpp
+
+jobs:
+  image:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Version
+        id: version
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          version=$(tr -d '[:space:]' < ci/cpp/VERSION)
+          [[ "$version" =~ ^[0-9]{4}\.[0-9]{2}\.[0-9]+$ ]] || { echo "::error::VERSION is not YYYY.MM.N: $version"; exit 1; }
+          if [ -n "$BASE" ]; then
+            changed=$(git diff --name-only "$BASE"...HEAD)
+            if grep -qx 'ci/cpp/Dockerfile' <<<"$changed" && ! grep -qx 'ci/cpp/VERSION' <<<"$changed"; then
+              echo "::error::ci/cpp/VERSION must change when ci/cpp/Dockerfile does"; exit 1
+            fi
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          docker build --pull \
+            --label org.opencontainers.image.source=https://github.com/${{ github.repository }} \
+            --label org.opencontainers.image.version="$VERSION" \
+            -t "$IMAGE:$VERSION" ci/cpp
+
+      - name: Smoke test
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          docker run --rm "$IMAGE:$VERSION" sh -ec '
+            clang --version; gcc-14 --version; cmake --version; ninja --version
+            ccache --version; clang-format --version; clang-tidy --version
+            printf "int main(void){return 0;}\n" > /tmp/t.c
+            clang -fsanitize=address,undefined /tmp/t.c -o /tmp/t && /tmp/t
+            gcc-14 /tmp/t.c -o /tmp/t && /tmp/t'
+
+      # A published version is never overwritten: a repository pinned to it
+      # keeps the toolchain it was tested with.
+      - name: Publish
+        id: publish
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          echo "$TOKEN" | docker login ghcr.io -u "$ACTOR" --password-stdin
+          if docker manifest inspect "$IMAGE:$VERSION" >/dev/null 2>&1; then
+            echo "$IMAGE:$VERSION is already published"; exit 0
+          fi
+          docker push "$IMAGE:$VERSION"
+          digest=$(docker inspect --format '{{index .RepoDigests 0}}' "$IMAGE:$VERSION" | cut -d@ -f2)
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        if: steps.publish.outputs.digest != ''
+        with:
+          subject-name: ${{ env.IMAGE }}
+          subject-digest: ${{ steps.publish.outputs.digest }}
+          push-to-registry: true
