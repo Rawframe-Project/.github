@@ -119,7 +119,7 @@ C and C++ production code asserts its invariants: preconditions, postconditions,
 ### Fuzzing and simulation
 
 - Fuzzing covers code that reads untrusted or complex input: parsers, decoders, network protocols, file formats, compilers and virtual machines, and pairs of implementations that must agree.
-- Pull requests that touch fuzzed code run a short fuzzing pass; a nightly run fuzzes longer and grows the corpus. Every crash it finds becomes a regression test.
+- Pull requests that touch fuzzed code run a short fuzzing pass; a nightly run fuzzes longer and grows the corpus. The corpus carries from night to night in an Actions cache per target, restored before the run, minimized with the fuzzer's merge step and saved after it; the committed seeds are its floor, and an input that reaches new code is committed as a seed when it is worth keeping. Every crash it finds becomes a regression test.
 - Deterministic simulation (a seed reproduces the run) is used where the product is deterministic.
 - Mutation testing is not part of the checks. There are no mutation sweeps and no mutation score. A maintainer may run it on one changed module as a review aid; surviving mutants are not a reason to add tests by themselves.
 
