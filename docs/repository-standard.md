@@ -109,7 +109,7 @@ Tests protect the core of the product: deterministic results, wire and file form
 - Test output stays short; details go to a log file.
 - **Integration tests** that drive real devices, sound servers, windows, emulators or browsers carry an `integration` label. They may read the clock and use localhost networking, stay out of the changed-files check, and are kept to a few end-to-end scenarios.
 - A check that fails intermittently is moved out of the required pull request check into the nightly run, with an issue, until it is fixed. It is never retried.
-- Generated sources and test data may be committed when CI cannot regenerate them. `docs/operations/` names the generator and the command, and `AGENTS.md` lists the generated paths. Anything a test needs to regenerate its data, such as oracle generators in an old private repository, moves into the repository's `tools/` before the migration finishes.
+- Generated sources and test data may be committed when CI cannot regenerate them. `docs/operations/` names the generator and the command, and `AGENTS.md` lists the generated paths. Anything a test needs to regenerate its data, such as oracle generators in an old private repository, moves into the repository's `tools/` before the migration finishes. If a generator is lost, the data stays as committed golden data, `docs/operations/` says the generator is missing, and an issue tracks writing it again.
 - Size and speed budgets the product promises are checked with a stated tolerance, never as exact counts.
 
 ### Assertions in code
