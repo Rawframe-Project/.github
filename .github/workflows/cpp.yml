@@ -80,20 +80,36 @@ jobs:
           persist-credentials: false
 
       # Inside the container the workspace has another path than the
-      # runner's github.workspace, so the cache folders are set here.
+      # runner's github.workspace, so the cache folders are set here. Mesa's
+      # software drivers key their shader cache on the CPU (model, features
+      # and count), so that cache is kept per CPU: a hit from another CPU
+      # would be read as empty.
       - name: Environment
+        id: env
         run: |
           echo "CCACHE_DIR=$GITHUB_WORKSPACE/.cache/ccache" >> "$GITHUB_ENV"
           echo "CCACHE_BASEDIR=$GITHUB_WORKSPACE" >> "$GITHUB_ENV"
           echo "MESA_SHADER_CACHE_DIR=$GITHUB_WORKSPACE/.cache/mesa" >> "$GITHUB_ENV"
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          cpu=none
+          if [ -r /proc/cpuinfo ]; then
+            cpu=$( { grep -m1 '^model name' /proc/cpuinfo; grep -m1 '^flags' /proc/cpuinfo; nproc; } | sha256sum | cut -c1-16)
+          fi
+          echo "cpu=$cpu" >> "$GITHUB_OUTPUT"
 
-      - name: Restore caches
+      - name: Restore ccache
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: .cache
-          key: build-${{ inputs.runner }}-${{ inputs.preset }}-${{ github.sha }}
-          restore-keys: build-${{ inputs.runner }}-${{ inputs.preset }}-
+          path: .cache/ccache
+          key: ccache-${{ inputs.runner }}-${{ inputs.preset }}-${{ github.sha }}
+          restore-keys: ccache-${{ inputs.runner }}-${{ inputs.preset }}-
+
+      - name: Restore shader cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/mesa
+          key: mesa-${{ inputs.runner }}-${{ inputs.preset }}-${{ steps.env.outputs.cpu }}-${{ github.sha }}
+          restore-keys: mesa-${{ inputs.runner }}-${{ inputs.preset }}-${{ steps.env.outputs.cpu }}-
 
       - name: Setup
         if: inputs.setup != ''
@@ -142,9 +158,16 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
-      - name: Save caches
+      - name: Save ccache
         if: always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: .cache
-          key: build-${{ inputs.runner }}-${{ inputs.preset }}-${{ github.sha }}
+          path: .cache/ccache
+          key: ccache-${{ inputs.runner }}-${{ inputs.preset }}-${{ github.sha }}
+
+      - name: Save shader cache
+        if: always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && hashFiles('.cache/mesa/**') != ''
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/mesa
+          key: mesa-${{ inputs.runner }}-${{ inputs.preset }}-${{ steps.env.outputs.cpu }}-${{ github.sha }}
