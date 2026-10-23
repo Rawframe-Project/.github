@@ -225,10 +225,10 @@ A repository moves to this standard in one pull request, or for a large reposito
 1. Write `AGENTS.md`, `README.md`, `docs/` and skills from the code. Old documents are read only to recover intent; nothing is copied from them.
 2. Remove everything the standard does not allow: journals, notes, old docs, duplicated health files.
 3. Prune the tests to the rules above and bring the checks within budget.
-4. Add the workflows, release-please (manifest at `0.0.1`), rulesets, labels and repository metadata. End the pull request body with the line `Release-As: 0.0.1`: the squash commit carries it, and it makes release-please open the `0.0.1` release pull request, which it would otherwise skip, because a migration is a `chore` and a manifest alone treats `0.0.1` as already released. Keep the hand-written `0.0.1` changelog entry over the one release-please generates.
+4. Add the workflows on the shared CI (see Continuous integration; `maul-unicode`'s `.github/workflows` are the model), release-please (manifest at `0.0.1`), rulesets, labels and repository metadata. End the pull request body with the line `Release-As: 0.0.1`: the squash commit carries it, and it makes release-please open the `0.0.1` release pull request, which it would otherwise skip, because a migration is a `chore` and a manifest alone treats `0.0.1` as already released. Keep the hand-written `0.0.1` changelog entry over the one release-please generates.
 5. The manager reviews the pull request against this document's checklist before it merges and runs `tools/repo-setup.sh`. The first release pull request publishes `v0.0.1`. Repositories that pin this one by tag move to `v0.0.1` next. The manager deletes the old tags and releases only when no repository's `main` reaches them, directly or through another repository's old tag (within a family, once the whole family has released `0.0.1`), so no dependent's CI breaks. Repositories migrate in dependency order: a library before the libraries that fetch it.
 
-`maul-unicode` is migrated first. The others follow once the owner has approved its result.
+`maul-unicode` was the pilot. The others follow in rounds of three or four, in dependency order.
 
 ## Sources
 
