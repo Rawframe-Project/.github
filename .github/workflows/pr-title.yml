@@ -30,6 +30,7 @@ jobs:
         env:
           TITLE: ${{ github.event.pull_request.title }}
           SCOPES: ${{ inputs.scopes }}
+          AUTHOR: ${{ github.event.pull_request.user.login }}
         run: |
           python3 - <<'EOF'
           import os, re, sys
@@ -45,7 +46,9 @@ jobs:
                   problems.append(f"scope '{m.group(3)}' is not one of: {', '.join(scopes)}")
               if title.endswith("."):
                   problems.append("the title ends with a period")
-          if len(title) > 72:
+          # Dependabot's titles name the package, both versions and the folder;
+          # it cannot shorten them, so only its titles may run longer.
+          if len(title) > 72 and os.environ["AUTHOR"] != "dependabot[bot]":
               problems.append(f"the title is {len(title)} characters, over 72")
           if "\u2014" in title:
               problems.append("the title has an em dash")
