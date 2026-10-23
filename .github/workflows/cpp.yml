@@ -126,7 +126,12 @@ jobs:
         run: |
           repeat=()
           [ "$REPEAT" -gt 1 ] && repeat=(--repeat "until-fail:$REPEAT")
-          ctest --preset "$PRESET" --no-tests=error "${repeat[@]}"
+          ctest --preset "$PRESET" --no-tests=error "${repeat[@]}" | tee "$RUNNER_TEMP/ctest.log"
+          # A skipped, disabled or missing test fails the cell: it would hide
+          # a check that no longer runs.
+          if grep -E '\*\*\*(Skipped|Not Run)' "$RUNNER_TEMP/ctest.log"; then
+            echo "::error::a test did not run"; exit 1
+          fi
 
       - name: Test logs
         if: failure()

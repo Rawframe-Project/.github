@@ -4,6 +4,8 @@
 # out or runs its code, so it is safe under pull_request_target.
 #
 #   on:
+#     # zizmor flags this trigger; the gate checks nothing out, so mark it
+#     # with `# zizmor: ignore[dangerous-triggers]` and this reason.
 #     pull_request_target:
 #       types: [opened, reopened, edited]
 #   permissions: {}

@@ -4,6 +4,9 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # A release is taken a week after it is published, once others have run it.
+    cooldown:
+      default-days: 7
     groups:
       actions:
         patterns: ["*"]
@@ -11,6 +14,9 @@ updates:
     directory: /workflow-templates
     schedule:
       interval: weekly
+    # A release is taken a week after it is published, once others have run it.
+    cooldown:
+      default-days: 7
     groups:
       templates:
         patterns: ["*"]
