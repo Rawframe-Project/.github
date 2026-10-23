@@ -14,3 +14,5 @@ Building blocks for games and real-time simulations: an engine, a scripting lang
 Every Maul library is usable on its own; Rawframe Engine is their first user, not their owner.
 
 These projects are developed with AI coding agents under human direction. How outside contributions work is described in [CONTRIBUTING.md](https://github.com/Rawframe-Project/.github/blob/main/CONTRIBUTING.md) and [AI_POLICY.md](https://github.com/Rawframe-Project/.github/blob/main/AI_POLICY.md).
+
+Contact: support@rawframe.net. Use of the Rawframe, Kest and Maul names and logos is described in the [trademark policy](https://github.com/Rawframe-Project/.github/blob/main/TRADEMARK.md).
