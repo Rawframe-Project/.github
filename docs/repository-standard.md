@@ -186,7 +186,7 @@ A repository's `ci.yml` lists what to check; the organization's reusable workflo
 
 - Every action in a workflow is pinned by commit SHA with its version in a comment, and `.github/dependabot.yml` keeps the pins current (the `github-actions` ecosystem, weekly, grouped).
 - Workflows declare the least `permissions` they need; the default token is read-only.
-- CodeQL scans every pull request and `main`: default setup where it builds the code, otherwise an advanced `.github/workflows/codeql.yml` (the two must not both be on).
+- CodeQL scans every pull request and `main` from an advanced `.github/workflows/codeql.yml` that builds with the repository's own toolchain; default setup stays off (`tools/repo-setup.sh` turns it off), since the two cannot both be on.
 - OpenSSF Scorecard runs weekly from `workflow-templates/scorecard.yml`, and the README shows its badge.
 - Secret scanning with push protection, Dependabot alerts and private vulnerability reporting are on.
 
