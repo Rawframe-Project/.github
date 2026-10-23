@@ -29,10 +29,19 @@ SKILL_LIMIT = 500
 
 # Journal residue that never belongs in documentation.
 FORBIDDEN = [
-    (re.compile(r"\b[DFQW]\d{2,4}\b(?![.\d])"), "internal decision or work number"),
+    (re.compile(r"\b(?:D(?!16\b|24\b|32\b)\d{2,4}|[QW]\d{2,4}|F(?:2[5-9]|[3-9]\d|\d{3,4}))\b(?![.\d])"), "internal decision or work number"),
+    (re.compile(r"\b[a-z]{3,5}-\d{4}\b"), "an internal record number"),
+    (re.compile(r"\([ADFILNQTUVW]\d{1,3}\)"), "an internal item id"),
     (re.compile(r"\b20\d\d-\d\d-\d\d\b"), "a date (history belongs in git and the changelog)"),
     (re.compile(r"(?i)\b(worklog|work log|state\.md|decisions\.md|questions\.md)\b"), "a reference to a work journal"),
 ]
+
+# Citations of old decision records in source comments. Distinctive forms only,
+# so identifiers and literals are not caught.
+CODE_FORBIDDEN = re.compile(
+    r"\b(?:ADR|SPEC|STD|RESEARCH)-\d{4}\b|\b[a-z]{3,5}-\d{4}\b|\bD(?!16\b|24\b|32\b)\d{2,4}\b(?![.\dA-Za-z])")
+CODE_SUFFIXES = {".c", ".h", ".cpp", ".hpp", ".cc", ".inl", ".py", ".sh", ".cmake", ".kest",
+                 ".js", ".ts", ".java", ".kt", ".m", ".mm", ".swift", ".yml", ".yaml"}
 
 LINK = re.compile(r"\[[^\]]*\]\(([^)\s]+)\)")
 TEXT_SUFFIXES = {
@@ -103,12 +112,13 @@ def main():
         if f != "CHANGELOG.md" and lines > limit:
             problems.append(f"{f}: {lines} lines, over the limit of {limit}")
 
-        if f not in ("CHANGELOG.md",):
-            prose = strip_code(text)
-            for n, line in enumerate(prose.splitlines(), 1):
-                for pattern, why in FORBIDDEN:
-                    if pattern.search(line):
-                        problems.append(f"{f}: {why}: {line.strip()[:80]}")
+        prose = strip_code(text)
+        for line in prose.splitlines():
+            for pattern, why in FORBIDDEN:
+                if f == "CHANGELOG.md" and "date" in why:
+                    continue
+                if pattern.search(line):
+                    problems.append(f"{f}: {why}: {line.strip()[:80]}")
 
         for target in LINK.findall(text):
             if re.match(r"^[a-z]+:", target) or target.startswith("#"):
@@ -116,6 +126,18 @@ def main():
             path = (Path(f).parent / target.split("#")[0]).resolve()
             if not path.exists():
                 problems.append(f"{f}: broken link {target}")
+
+    for f in files:
+        p = Path(f)
+        if p.suffix not in CODE_SUFFIXES and p.name not in ("CMakeLists.txt", "Makefile"):
+            continue
+        try:
+            text = p.read_text(encoding="utf-8")
+        except (UnicodeDecodeError, FileNotFoundError):
+            continue
+        for n, line in enumerate(text.splitlines(), 1):
+            if CODE_FORBIDDEN.search(line):
+                problems.append(f"{f}:{n}: cites an old record: {line.strip()[:80]}")
 
     return report(problems)
 
