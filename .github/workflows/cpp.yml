@@ -68,8 +68,10 @@ jobs:
     name: ${{ inputs.preset }}
     runs-on: ${{ inputs.runner }}
     timeout-minutes: ${{ inputs.timeout }}
-    # The CI image; a new version is a new pin of this workflow.
-    container: ${{ startsWith(inputs.runner, 'ubuntu') && 'ghcr.io/rawframe-project/ci-cpp:2026.10.1@sha256:8f504f30528cb00f62a72ef4901c60dfe17b8cf0444ac18f29814cfdea6e7fa7' || null }}
+    # The CI image, pinned by digest; a new version is a new pin of this
+    # workflow. zizmor reads the null of the macOS and Windows branch as an
+    # unpinned image.
+    container: ${{ startsWith(inputs.runner, 'ubuntu') && 'ghcr.io/rawframe-project/ci-cpp:2026.10.1@sha256:8f504f30528cb00f62a72ef4901c60dfe17b8cf0444ac18f29814cfdea6e7fa7' || null }} # zizmor: ignore[unpinned-images]
     permissions:
       contents: read
     steps:
