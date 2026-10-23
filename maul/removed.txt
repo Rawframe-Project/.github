@@ -1,0 +1,26 @@
+# Files the Maul family no longer shares; a library must not carry them.
+# The organization's CONTRIBUTING.md applies instead of the family's, and
+# the conventions moved to docs/internals/maul-conventions.md.
+CONTRIBUTING.md
+docs/conventions.md
+docs/adr/0001-one-family-one-set-of-rules.md
+docs/adr/0002-refusals-record-a-reason.md
+docs/adr/0003-restart-at-0-0-1.md
+docs/adr/0004-shared-code-by-copy.md
+docs/adr/0005-family-core-and-library-profiles.md
+docs/adr/0006-shared-files-synced-from-one-copy.md
+docs/adr/0007-naming-prefixes.md
+docs/adr/0008-c23-with-portable-headers.md
+docs/adr/0009-fallible-calls-return-their-status.md
+docs/adr/0010-allocators-per-object.md
+docs/adr/0011-code-style-checked-by-tools.md
+docs/adr/0012-structure-limits-and-module-graph.md
+docs/adr/0013-performance-discipline.md
+docs/adr/0014-out-parameters-strings-assertions.md
+docs/adr/0015-record-naming.md
+docs/adr/0016-handles.md
+docs/adr/0017-threads.md
+docs/adr/0018-asynchronous-requests.md
+docs/adr/0019-guide-snippets-run-by-tests.md
+docs/adr/0020-parts-with-their-own-sources.md
+docs/adr/README.md

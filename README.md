@@ -10,6 +10,7 @@ Shared files for every repository of the Rawframe Project organization.
   - `changes.yml`: tells CI whether a pull request changes anything beyond documentation.
   - `zizmor.yml`: audits the repository's workflows.
   - `pr-gate.yml`: closes a pull request from outside the organization that does not close an `accepted` issue.
+- `maul/` holds the Maul family's shared files and `family_sync.py`, which writes them into a library; `.github/workflows/maul-family.yml` checks every migrated library against them. See `maul/README.md`.
 - `ci/cpp/` is the CI image for C and C++, published by `.github/workflows/ci-image.yml` as `ghcr.io/rawframe-project/ci-cpp:<VERSION>`.
 - `scripts/docs_check.py` is the documentation check the workflow runs. Run it locally from a repository root with `python3 <path>/scripts/docs_check.py`.
 - `workflow-templates/` holds the Scorecard and release workflows each repository copies into its own `.github/workflows/` (replace `$default-branch` with `main`). They are templates rather than reusable workflows because Scorecard must run from the repository it grades and release builds differ per repository.

@@ -85,7 +85,7 @@ There is no numbered decision log. A decision is recorded by writing its reasoni
 
 ## Shared files
 
-Files that several repositories must keep identical (the Maul family's shared sources, build modules, check tools and conventions page) have one canonical copy in the organization's `.github` repository. A sync tool writes them into each repository, and a reusable workflow fails a repository's CI when its copy drifts. A repository changes a shared file only by changing the canonical copy first.
+Files that several repositories must keep identical (the Maul family's shared sources, build modules, check tools and conventions page) have one canonical copy in the organization's `.github` repository, under `maul/`. `maul/family_sync.py --write <library>` writes them into a library, and `maul-family.yml` in `.github` checks every migrated library against them when they change and every night; a drift there is fixed like a red `main`. A repository changes a shared file only by changing the canonical copy first.
 
 ## Tests
 

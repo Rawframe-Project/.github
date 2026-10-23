@@ -1,0 +1,41 @@
+# Checks that every Maul library on the repository standard carries the
+# family's shared files exactly as maul/ holds them. It runs when the
+# canonical files change and every night, so a library that drifted, or one
+# that a canonical change left behind, shows here; its session then runs
+# maul/family_sync.py --write in its checkout.
+name: maul-family
+
+on:
+  pull_request:
+    paths: [maul/**, .github/workflows/maul-family.yml]
+  push:
+    branches: [main]
+    paths: [maul/**, .github/workflows/maul-family.yml]
+  schedule:
+    - cron: "41 3 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  drift:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Clone the libraries
+        run: |
+          mkdir -p "$RUNNER_TEMP/maul"
+          for library in $(sed 's/#.*//' maul/libraries.txt | awk 'NF {print $1}'); do
+            git clone -q --depth 1 "https://github.com/Rawframe-Project/$library.git" "$RUNNER_TEMP/maul/$library"
+          done
+      - name: Family files
+        run: python3 maul/family_sync.py --check --migrated --root "$RUNNER_TEMP/maul"
