@@ -165,8 +165,18 @@ jobs:
           path: .cache/ccache
           key: ccache-${{ inputs.runner }}-${{ inputs.preset }}-${{ github.sha }}
 
+      # hashFiles() runs on the runner host, which cannot read the folders
+      # Mesa creates inside the container, so the check is a step instead.
+      - name: Check shader cache
+        id: mesa
+        if: always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: |
+          if [ -n "$(find .cache/mesa -type f -print -quit 2>/dev/null)" ]; then
+            echo "save=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Save shader cache
-        if: always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && hashFiles('.cache/mesa/**') != ''
+        if: always() && steps.mesa.outputs.save == 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .cache/mesa
