@@ -12,9 +12,10 @@ ARG TARGETARCH
 # components and tests link: X11, Wayland and XCB for windows, ALSA, Pulse
 # and PipeWire for audio, lavapipe and the validation layers for Vulkan,
 # HarfBuzz and ICU as test oracles, a D-Bus daemon for tests that start a
-# private session bus, a private PipeWire and PulseAudio sound server for
-# audio integration tests, LLVM's tools for symbolized sanitizer stacks and
-# coverage, and what headless Chrome needs to launch.
+# private session bus, a private PipeWire and PulseAudio sound server
+# with ALSA's PulseAudio plugin for audio integration tests, LLVM's tools
+# for symbolized sanitizer stacks and coverage, and what headless Chrome
+# needs to launch.
 RUN apt-get update -q \
     && apt-get install -y -q --no-install-recommends \
         ca-certificates curl git git-lfs xz-utils unzip file \
@@ -30,7 +31,7 @@ RUN apt-get update -q \
         libasound2-dev libpulse-dev libpipewire-0.3-dev \
         libharfbuzz-dev libicu-dev python3-aioquic \
         dbus-daemon \
-        pipewire pipewire-bin pipewire-pulse wireplumber pulseaudio-utils \
+        pipewire pipewire-bin pipewire-pulse wireplumber pulseaudio-utils libasound2-plugins \
         libnss3 libatk1.0-0t64 libatk-bridge2.0-0t64 libcups2t64 libgbm1 libdrm2 \
         libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libxshmfence1 \
         libpango-1.0-0 libcairo2 libasound2t64 fonts-liberation \
