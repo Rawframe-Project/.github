@@ -101,6 +101,7 @@ jobs:
             node --version; npm --version; dbus-daemon --version | head -1
             llvm-symbolizer --version | head -1; llvm-profdata merge --help >/dev/null; llvm-cov --version | head -1
             pipewire --version; wireplumber --version | head -1; pactl --version | head -1
+            test -f /usr/share/alsa/alsa.conf.d/50-pulseaudio.conf
             git config --system --get-all safe.directory | grep -qx "*"'
 
       # A published version is never overwritten: a repository pinned to it
