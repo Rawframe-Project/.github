@@ -169,6 +169,7 @@ A repository's `ci.yml` lists what to check; the organization's reusable workflo
 
 - **Presets.** `CMakePresets.json` defines, for every CI cell, a configure, a build and a test preset of the same name, with the binary directory `out/<preset>` and the test timeout. `tools/check.sh` runs the same presets locally.
 - **Toolchain.** Linux cells run in the organization's CI image, `ghcr.io/rawframe-project/ci-cpp:<YYYY.MM.N>`, built from `.github/ci/cpp`: compilers, build tools and the libraries the families link, with nothing installed during the run. A repository takes a new image with the next pin of the reusable workflow, never all at once. macOS and Windows cells use the runner's own toolchain.
+- **Pins.** Reusable workflows are pinned by the commit of a `.github` release, with its tag in a comment (`@<sha> # v0.0.1`). Dependabot moves the pins; the manager tags `.github` whenever a shared workflow, template or the image changes.
 - **One workflow per cell.** Each matrix cell calls `cpp.yml` with its preset and runner. Jobs other than builds (format, static analysis, generated files, size reports) stay in the repository's own `ci.yml`, in the same image.
 - **Caches.** ccache and the Mesa shader cache are restored for every run and saved only from `main`, so pull requests start warm and never overwrite each other. No job installs packages it could take from the image.
 - **Changed files.** The first job calls `changes.yml`; a pull request that changes only documentation skips the builds.

@@ -14,7 +14,7 @@
 #             - { preset: linux-clang-asan, repeat: 3 }
 #             - { preset: linux-gcc }
 #             - { preset: windows-clang-cl, runner: windows-2025 }
-#       uses: Rawframe-Project/.github/.github/workflows/cpp.yml@<sha> # main
+#       uses: Rawframe-Project/.github/.github/workflows/cpp.yml@<sha> # v<version>
 #       with:
 #         preset: ${{ matrix.preset }}
 #         runner: ${{ matrix.runner || 'ubuntu-24.04' }}

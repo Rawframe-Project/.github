@@ -5,7 +5,7 @@
 #
 #   jobs:
 #     zizmor:
-#       uses: Rawframe-Project/.github/.github/workflows/zizmor.yml@<sha> # main
+#       uses: Rawframe-Project/.github/.github/workflows/zizmor.yml@<sha> # v<version>
 name: zizmor
 
 on:

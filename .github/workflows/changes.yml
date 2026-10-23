@@ -5,7 +5,7 @@
 #
 #   jobs:
 #     changes:
-#       uses: Rawframe-Project/.github/.github/workflows/changes.yml@<sha> # main
+#       uses: Rawframe-Project/.github/.github/workflows/changes.yml@<sha> # v<version>
 #       permissions:
 #         pull-requests: read
 #     build:
