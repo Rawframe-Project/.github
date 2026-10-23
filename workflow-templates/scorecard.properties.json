@@ -1,0 +1,6 @@
+{
+  "name": "OpenSSF Scorecard",
+  "description": "Grades the repository's security practices weekly and publishes the result for the README badge.",
+  "iconName": "octicon shield-check",
+  "categories": ["Code scanning"]
+}

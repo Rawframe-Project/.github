@@ -2,11 +2,15 @@
 
 Thank you for your interest. Please read this before opening an issue or a pull request.
 
+## Questions and ideas
+
+Ask questions and share ideas in the repository's **Discussions**. Issues are for bugs and for work a maintainer has agreed to.
+
 ## Issues are welcome
 
 Bug reports are the most useful contribution. Search the existing issues first, then open one with the bug template: what you did, what you expected, what happened, and the version and platform. A minimal reproduction makes a fix much more likely.
 
-Ideas and feature requests are also welcome as issues. Describe the problem you want solved rather than a specific implementation.
+A feature request starts as an idea in Discussions. Describe the problem you want solved rather than a specific implementation; a maintainer turns it into an issue when it is agreed.
 
 Report security vulnerabilities privately, as described in [SECURITY.md](SECURITY.md), never in a public issue.
 

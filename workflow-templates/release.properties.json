@@ -1,0 +1,6 @@
+{
+  "name": "Release",
+  "description": "release-please release pull requests, then release files with checksums, an SBOM and build provenance attestations.",
+  "iconName": "octicon package",
+  "categories": ["Deployment"]
+}
