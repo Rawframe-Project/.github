@@ -75,7 +75,8 @@ jobs:
             ccache --version; clang-format --version; clang-tidy --version
             printf "int main(void){return 0;}\n" > /tmp/t.c
             clang -fsanitize=address,undefined /tmp/t.c -o /tmp/t && /tmp/t
-            gcc-14 /tmp/t.c -o /tmp/t && /tmp/t'
+            gcc-14 /tmp/t.c -o /tmp/t && /tmp/t
+            node --version; npm --version; dbus-daemon --version | head -1'
 
       # A published version is never overwritten: a repository pinned to it
       # keeps the toolchain it was tested with.
