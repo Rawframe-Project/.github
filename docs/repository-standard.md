@@ -178,6 +178,7 @@ A repository's `ci.yml` lists what to check; the organization's reusable workflo
 - **New tests repeat.** One sanitizer cell sets `repeat: 3`: on pull requests every test runs up to three times until it fails, so a flaky test fails before it merges.
 - **Workflow hygiene.** Every workflow sets `permissions: {}` at the top and grants each job what it needs, sets `defaults.run.shell: bash` (so a failing command anywhere in a pipeline fails the step; `scorecard.yml` is the one exception, since Scorecard rejects top-level defaults), checks out with `persist-credentials: false`, and passes event data to scripts only through `env`. `zizmor.yml` audits every workflow on each pull request.
 - **Pull request gate.** `pr-gate.yml` runs on `pull_request_target` and closes a pull request from outside the organization unless it closes an issue labeled `accepted`. It never checks out the pull request's code.
+- **Empty checks fail.** A step that feeds files to a tool (a formatter, a linter, a test runner) fails when the list is empty, and a test cell fails when ctest skips, disables or cannot find a test; a check that checks nothing is a hidden red.
 - **Failures.** A failed test cell uploads its ctest logs for a week. A failure on `main` is reported to the manager and fixed before other work.
 - **Runners.** GitHub-hosted runners, free for public repositories. A larger or paid runner needs a measurement that the budget cannot be met without it.
 
