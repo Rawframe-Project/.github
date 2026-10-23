@@ -1,6 +1,6 @@
 # Builds and tests one CMake preset: the configure, build and test presets
-# of that name, with the binary directory out/<preset>. On Linux it runs in
-# the organization's CI image, so every repository builds with the same
+# of that name, with the binary directory out/<preset>. On Linux, x86-64 or
+# arm64 (runner ubuntu-24.04-arm), it runs in the organization's CI image, so every repository builds with the same
 # pinned toolchain; macOS and Windows use the runner's own. ccache and the
 # Mesa shader cache are restored on every run and saved only from main, so a
 # pull request starts from main's latest build and never writes over it.
@@ -71,7 +71,7 @@ jobs:
     # The CI image, pinned by digest; a new version is a new pin of this
     # workflow. zizmor reads the null of the macOS and Windows branch as an
     # unpinned image.
-    container: ${{ startsWith(inputs.runner, 'ubuntu') && 'ghcr.io/rawframe-project/ci-cpp:2026.10.2@sha256:73aa949aa7e24c9153107e0c601011ab689d3af0bf987ed7128e90faa3a754ef' || null }} # zizmor: ignore[unpinned-images]
+    container: ${{ startsWith(inputs.runner, 'ubuntu') && 'ghcr.io/rawframe-project/ci-cpp:2026.10.3@sha256:af7335beac5206f116bc82f9b44538bc633395bd0c10d933012c41f56326e0fc' || null }} # zizmor: ignore[unpinned-images]
     permissions:
       contents: read
     steps:
