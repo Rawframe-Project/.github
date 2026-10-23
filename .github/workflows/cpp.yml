@@ -71,7 +71,7 @@ jobs:
     # The CI image, pinned by digest; a new version is a new pin of this
     # workflow. zizmor reads the null of the macOS and Windows branch as an
     # unpinned image.
-    container: ${{ startsWith(inputs.runner, 'ubuntu') && 'ghcr.io/rawframe-project/ci-cpp:2026.10.4@sha256:9715ff153db04ba0ed4f520b6d2528ff7860f803de61ab011ba60a4eed572836' || null }} # zizmor: ignore[unpinned-images]
+    container: ${{ startsWith(inputs.runner, 'ubuntu') && 'ghcr.io/rawframe-project/ci-cpp:2026.10.5@sha256:bc8ecad77f13664efd2c5961f3c82751d45b3c0b05fb3ccaaea9d0bdd0966f60' || null }} # zizmor: ignore[unpinned-images]
     permissions:
       contents: read
     steps:
