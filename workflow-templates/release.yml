@@ -8,6 +8,8 @@ name: release
 on:
   push:
     branches: [$default-branch]
+  # Runs again by hand after a failed push run, without a new commit.
+  workflow_dispatch:
 
 permissions:
   contents: read
