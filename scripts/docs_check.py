@@ -38,8 +38,20 @@ FORBIDDEN = [
 
 # Citations of old decision records in source comments. Distinctive forms only,
 # so identifiers and literals are not caught.
-CODE_FORBIDDEN = re.compile(
-    r"\b(?:ADR|SPEC|STD|RESEARCH)-\d{4}\b|\b[a-z]{3,5}-\d{4}\b|\bD(?!16\b|24\b|32\b)\d{2,4}\b(?![.\dA-Za-z])")
+CODE_FORBIDDEN = re.compile(r"\b(?:ADR|SPEC|STD|RESEARCH)-\d{4}\b|\b[a-z]{3,5}-\d{4}\b")
+CODE_D_NUMBER = re.compile(r"\bD(?!16\b|24\b|32\b)\d{2,4}\b(?![.\dA-Za-z])")
+# A D-number that is not an old record: a code point (U+D800, 0xD800, \uD800)
+# or a definition of the Unicode Standard (UAX #15 D114, definition D117).
+NOT_A_RECORD = re.compile(r"(?:U\+|0x|\\u|[#/])$|(?i:definition|definitions|UAX\s*#\d+|Unicode)\s*$")
+
+
+def cites_record(line):
+    if CODE_FORBIDDEN.search(line):
+        return True
+    for m in CODE_D_NUMBER.finditer(line):
+        if not NOT_A_RECORD.search(line[max(0, m.start() - 24):m.start()]):
+            return True
+    return False
 CODE_SUFFIXES = {".c", ".h", ".cpp", ".hpp", ".cc", ".inl", ".py", ".sh", ".cmake", ".kest",
                  ".js", ".ts", ".java", ".kt", ".m", ".mm", ".swift", ".yml", ".yaml"}
 
@@ -136,7 +148,7 @@ def main():
         except (UnicodeDecodeError, FileNotFoundError):
             continue
         for n, line in enumerate(text.splitlines(), 1):
-            if CODE_FORBIDDEN.search(line):
+            if cites_record(line):
                 problems.append(f"{f}:{n}: cites an old record: {line.strip()[:80]}")
 
     return report(problems)
