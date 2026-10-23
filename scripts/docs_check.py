@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """Check a repository against the documentation rules of the repository standard.
 
-Usage: docs_check.py [--exclude PATH ...] [--strict]
+Usage: docs_check.py [--root REPO] [--exclude PATH ...] [--strict]
 
-Run from the repository root. Reads the tracked files from git. Prints one line
+Run from the repository root, or name it with --root. Reads the tracked files from git. Prints one line
 per problem and exits 1 if there is any. Without --strict, a repository that has
 no AGENTS.md yet (not migrated) is only checked for the em dash.
 """
 
 import argparse
+import os
 import re
 import subprocess
 import sys
@@ -85,7 +86,9 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--exclude", action="append", default=[], help="a path prefix to skip, such as third_party")
     parser.add_argument("--strict", action="store_true", help="check the full standard even before AGENTS.md exists")
+    parser.add_argument("--root", default=".", help="the repository to check (default: the current directory)")
     args = parser.parse_args()
+    os.chdir(args.root)
 
     files = tracked(args.exclude)
     migrated = args.strict or "AGENTS.md" in files
