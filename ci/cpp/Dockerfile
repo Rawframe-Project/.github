@@ -14,7 +14,8 @@ ARG TARGETARCH
 # HarfBuzz and ICU as test oracles, a D-Bus daemon for tests that start a
 # private session bus, a private PipeWire and PulseAudio sound server
 # with ALSA's PulseAudio plugin for audio integration tests, LLVM's tools
-# for symbolized sanitizer stacks and coverage, and what headless Chrome needs to launch.
+# for symbolized sanitizer stacks and coverage, and what headless Chrome
+# needs to launch.
 RUN apt-get update -q \
     && apt-get install -y -q --no-install-recommends \
         ca-certificates curl git git-lfs xz-utils unzip file \
