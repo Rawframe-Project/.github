@@ -44,14 +44,18 @@ jobs:
           permission=$(gh api "repos/$REPO/collaborators/$AUTHOR/permission" --jq .permission 2>/dev/null || echo none)
           case "$permission" in admin|maintain|write) echo "maintainer"; exit 0 ;; esac
           owner=${REPO%/*} name=${REPO#*/}
+          # An issue counts only in this repository, open, and labeled.
           accepted=$(gh api graphql -F owner="$owner" -F name="$name" -F number="$NUMBER" -f query='
             query($owner: String!, $name: String!, $number: Int!) {
               repository(owner: $owner, name: $name) {
                 pullRequest(number: $number) {
-                  closingIssuesReferences(first: 10) { nodes { number labels(first: 20) { nodes { name } } } }
+                  closingIssuesReferences(first: 10) {
+                    nodes { number state repository { nameWithOwner } labels(first: 20) { nodes { name } } }
+                  }
                 }
               }
-            }' --jq '[.data.repository.pullRequest.closingIssuesReferences.nodes[]
+            }' | jq --arg repo "$REPO" '[.data.repository.pullRequest.closingIssuesReferences.nodes[]
+                      | select(.repository.nameWithOwner == $repo and .state == "OPEN")
                       | select(any(.labels.nodes[]; .name == "accepted")) | .number] | length')
           if [ "$accepted" -gt 0 ]; then echo "closes an accepted issue"; exit 0; fi
           gh pr close "$NUMBER" -R "$REPO" --comment "Thank you for the pull request. This project accepts pull requests only for an issue a maintainer has labeled \`accepted\`; please open or find the issue first and link it with \`Closes #<number>\`. See [CONTRIBUTING.md](https://github.com/Rawframe-Project/.github/blob/main/CONTRIBUTING.md)."
