@@ -47,7 +47,7 @@ jobs:
                   problems.append("the title ends with a period")
           if len(title) > 72:
               problems.append(f"the title is {len(title)} characters, over 72")
-          if "—" in title:
+          if "\u2014" in title:
               problems.append("the title has an em dash")
           for p in problems:
               print(f"pull request title: {p}")

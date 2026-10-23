@@ -14,7 +14,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-EM_DASH = "—"
+EM_DASH = "\u2014"
 
 # Markdown allowed at the root; everything else must live under these folders.
 ROOT_MARKDOWN = {
