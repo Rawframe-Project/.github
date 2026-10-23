@@ -66,7 +66,7 @@ Preferences of the owner that are not about the product (language of conversatio
 - Most code changes need no documentation change. Before adding a paragraph, ask what a maintainer or user would get wrong without it.
 - When a documented decision or behavior changes, rewrite or delete the affected text in the same pull request. Never append an amendment, a dated note or a second account. Git keeps the history.
 - A new page needs a distinct and lasting reason to exist. Prefer extending an existing page.
-- Write in the product's voice, present tense, third person. No first person, no "we decided on", no dates, no names, no internal numbers (D123, F45, W30, ADR-0012, mui-0004). The same holds for code comments: a comment explains why, it never cites a record.
+- Write in the product's voice, present tense, third person. No first person, no "we decided on", no dates, no names, no internal numbers (`D123`, `F45`, `W30`, `ADR-0012`, `mui-0004`). The same holds for code comments: a comment explains why, it never cites a record.
 - A local implementation detail goes in a code comment next to the code. Comments say why, never what.
 - Pages stay under 400 lines; reference pages over 100 lines start with a table of contents.
 

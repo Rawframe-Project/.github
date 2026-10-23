@@ -19,7 +19,7 @@ EM_DASH = "\u2014"
 # Markdown allowed at the root; everything else must live under these folders.
 ROOT_MARKDOWN = {
     "README.md", "AGENTS.md", "CLAUDE.md", "CHANGELOG.md",
-    "CONTRIBUTING.md", "SECURITY.md", "AI_POLICY.md", "CODE_OF_CONDUCT.md",
+    "CONTRIBUTING.md", "SECURITY.md", "AI_POLICY.md", "CODE_OF_CONDUCT.md", "TRADEMARK.md",
 }
 MARKDOWN_FOLDERS = ("docs/", ".agents/", ".github/")
 
