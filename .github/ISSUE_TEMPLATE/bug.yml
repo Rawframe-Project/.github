@@ -1,0 +1,48 @@
+name: Bug report
+description: Something does not work as documented.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How to reproduce
+      description: The smallest program, input or steps that show the problem.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The release or commit you used.
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: Platform
+      description: Operating system, architecture, compiler or GPU where it matters.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or output
+      description: Paste relevant output. It is formatted as code automatically.
+      render: text
+  - type: dropdown
+    id: ai
+    attributes:
+      label: AI assistance
+      description: Did an AI tool help write this report? See AI_POLICY.md.
+      options:
+        - "No"
+        - "Yes, and I checked everything it wrote"
+    validations:
+      required: true

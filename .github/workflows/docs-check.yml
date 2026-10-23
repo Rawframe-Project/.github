@@ -1,0 +1,37 @@
+name: docs check
+
+# Reusable: call from a repository with
+#   jobs:
+#     docs:
+#       uses: Rawframe-Project/.github/.github/workflows/docs-check.yml@main
+#       with:
+#         exclude: third_party vendor
+
+on:
+  workflow_call:
+    inputs:
+      exclude:
+        description: Space-separated path prefixes to skip, such as vendored code.
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: Rawframe-Project/.github
+          path: .org-defaults
+      - name: Check documentation
+        env:
+          EXCLUDE: ${{ inputs.exclude }}
+        run: |
+          args=()
+          for e in $EXCLUDE; do args+=(--exclude "$e"); done
+          python3 .org-defaults/scripts/docs_check.py --exclude .org-defaults "${args[@]}"

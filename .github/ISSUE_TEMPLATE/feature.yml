@@ -1,0 +1,31 @@
+name: Feature request
+description: A problem the project does not solve yet.
+labels: [feature]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What you are trying to do, and why the current behavior is not enough.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: What you would like to happen. Describe the outcome rather than the implementation.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: Workarounds you use today or other approaches you considered.
+  - type: dropdown
+    id: ai
+    attributes:
+      label: AI assistance
+      description: Did an AI tool help write this request? See AI_POLICY.md.
+      options:
+        - "No"
+        - "Yes, and I checked everything it wrote"
+    validations:
+      required: true

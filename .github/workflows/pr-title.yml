@@ -1,0 +1,55 @@
+name: pull request title
+
+# Reusable: call from a repository with
+#   on:
+#     pull_request:
+#       types: [opened, edited, synchronize, reopened]
+#   jobs:
+#     title:
+#       uses: Rawframe-Project/.github/.github/workflows/pr-title.yml@main
+#       with:
+#         scopes: core text tools
+
+on:
+  workflow_call:
+    inputs:
+      scopes:
+        description: Space-separated scopes the repository accepts. Empty accepts any lower-case scope.
+        type: string
+        default: ""
+
+permissions:
+  pull-requests: read
+
+jobs:
+  title:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Check the title
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+          SCOPES: ${{ inputs.scopes }}
+        run: |
+          python3 - <<'EOF'
+          import os, re, sys
+          title = os.environ["TITLE"]
+          scopes = os.environ["SCOPES"].split()
+          types = "feat|fix|perf|refactor|docs|test|build|ci|chore"
+          m = re.fullmatch(rf"({types})(\(([a-z0-9-]+)\))?!?: ([a-z0-9`].*)", title)
+          problems = []
+          if not m:
+              problems.append(f"the title is not 'type(scope): summary' with a type from {types.replace('|', ', ')} and a lower-case summary")
+          else:
+              if scopes and m.group(3) and m.group(3) not in scopes:
+                  problems.append(f"scope '{m.group(3)}' is not one of: {', '.join(scopes)}")
+              if title.endswith("."):
+                  problems.append("the title ends with a period")
+          if len(title) > 72:
+              problems.append(f"the title is {len(title)} characters, over 72")
+          if "—" in title:
+              problems.append("the title has an em dash")
+          for p in problems:
+              print(f"pull request title: {p}")
+          sys.exit(1 if problems else 0)
+          EOF
