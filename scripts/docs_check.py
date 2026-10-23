@@ -129,6 +129,10 @@ def main():
             for pattern, why in FORBIDDEN:
                 if f == "CHANGELOG.md" and "date" in why:
                     continue
+                if "decision or work number" in why and not any(
+                        not NOT_A_RECORD.search(line[max(0, m.start() - 24):m.start()])
+                        for m in pattern.finditer(line)):
+                    continue
                 if pattern.search(line):
                     problems.append(f"{f}: {why}: {line.strip()[:80]}")
 
