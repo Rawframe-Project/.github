@@ -59,4 +59,9 @@ RUN for t in clang clang++ clang-tidy ld.lld llvm-symbolizer llvm-profdata llvm-
     done \
     && pip install --no-cache-dir --break-system-packages clang-format==22.1.5 markdown==3.6
 
+# A job's checkout belongs to another user than the container's root, so
+# git would refuse it as dubious ownership and a check reading `git ls-files`
+# would silently see no files. The image trusts every directory.
+RUN git config --system --add safe.directory '*'
+
 ENV CC=clang CXX=clang++ CCACHE_DIR=/ccache CCACHE_MAXSIZE=2G CCACHE_COMPILERCHECK=content
