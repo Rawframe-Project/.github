@@ -9,9 +9,11 @@
 # include/<MAUL_LIBRARY>/ that tools/gen_api.py reads. A part
 # tools/source-dirs.txt lists is a library of its own and is not counted.
 # Their functions are what gen_api.collect finds, less the static inline
-# helpers, which no library exports, and less a declaration without the
-# API macro, which the program defines and the library calls. The
-# library's name and prefixes come from CMakeLists.txt through gen_api.
+# helpers, which no library exports. Every one carries the API macro,
+# except a function the program defines and the library calls, which
+# --program names; a named one that is missing, carries the macro or is
+# exported fails the check. The library's name and prefixes come from
+# CMakeLists.txt through gen_api.
 # A header whose functions the build leaves out, such as a platform's
 # adapter on another platform or a companion static library, is named
 # with --exclude; an excluded header that is missing, or one whose
@@ -22,7 +24,7 @@
 # a declared function missing from the library. Each failure names the
 # symbol.
 #
-#   python3 tools/check_exports.py [--nm NM] [--exclude HEADER ...] \
+#   python3 tools/check_exports.py [--nm NM] [--exclude HEADER ...] [--program FUNCTION ...] \
 #       out/linux-shared/lib<library>.so
 #
 # Reads the dynamic symbol table with nm (CMake passes CMAKE_NM); for ELF
@@ -42,11 +44,12 @@ CODE = set("TtWw")
 
 
 def declared(excluded):
-    """The names of the functions the library's public headers declare
-    with its API macro, and those of the excluded headers, by header."""
+    """The functions the library's public headers declare: those of the
+    counted headers, the subset declared without the API macro, and those
+    of each excluded header."""
     macro = re.compile(r"\b" + gen_api.cmake_setting("MAUL_MACRO_PREFIX") + r"_API\b[\w\s*]*?\b("
                        + gen_api.PREFIX + r"\w+)\s*\(")
-    public, left_out = set(), {}
+    public, unmarked, left_out = set(), set(), {}
     for header in gen_api.header_order(gen_api.HEADER_DIR, gen_api.LIB):
         with open(os.path.join(gen_api.HEADER_DIR, header), encoding="utf-8") as f:
             text = f.read()
@@ -54,14 +57,14 @@ def declared(excluded):
         names = set()
         for _, signature in gen_api.collect(text.split("\n")):
             found = re.search(r"\b(" + gen_api.PREFIX + r"\w+)\s*\(", signature)
-            if (found and found.group(1) in marked
-                    and "static" not in signature[:found.start()].split()):
+            if found and "static" not in signature[:found.start()].split():
                 names.add(found.group(1))
         if header in excluded:
             left_out[header] = names
         else:
             public |= names
-    return public, left_out
+            unmarked |= names - marked
+    return public, unmarked, left_out
 
 
 def exported(nm, library):
@@ -88,23 +91,35 @@ def main():
     parser.add_argument("--nm", default="nm", help="the nm to read the library with")
     parser.add_argument("--exclude", action="append", default=[], metavar="HEADER",
                         help="a header in include/<library>/ whose functions the build leaves out")
+    parser.add_argument("--program", action="append", default=[], metavar="FUNCTION",
+                        help="a function the headers declare without the API macro for the program to define")
     parser.add_argument("library")
     args = parser.parse_args()
-    public, left_out = declared(set(args.exclude))
+    public, unmarked, left_out = declared(set(args.exclude))
+    program = set(args.program)
     symbols = exported(args.nm, args.library)
     prefix = gen_api.PREFIX
+    macro = gen_api.cmake_setting("MAUL_MACRO_PREFIX") + "_API"
     wrong = []
     for header in sorted(set(args.exclude) - left_out.keys()):
         wrong.append(f"excluded but not a public header: {header}")
     for header, names in sorted(left_out.items()):
         for name in sorted(names & symbols.keys()):
             wrong.append(f"exported but its header {header} is excluded: {name}")
+    for name in sorted(unmarked - program):
+        wrong.append(f"declared without {macro}: {name}")
+    for name in sorted(program - unmarked):
+        wrong.append(f"named as the program's but not declared without {macro}: {name}")
+    for name in sorted(program & symbols.keys()):
+        wrong.append(f"exported but the program defines it: {name}")
+    hidden = set().union(*left_out.values()) | program
+    public -= program
     for name, letter in sorted(symbols.items()):
         if not name.startswith(prefix):
             wrong.append(f"exported without the {prefix} prefix: {name}")
         elif letter not in CODE:
             wrong.append(f"exported data: {name}")
-        elif name not in public and not any(name in n for n in left_out.values()):
+        elif name not in public and name not in hidden:
             wrong.append(f"exported but not public: {name}")
     for name in sorted(public - symbols.keys()):
         wrong.append(f"public but not exported: {name}")
