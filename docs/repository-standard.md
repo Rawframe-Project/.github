@@ -130,6 +130,7 @@ C and C++ production code asserts its invariants: preconditions, postconditions,
 - The pull request check in CI: under 10 minutes.
 - The full check on `main` and nightly: under 20 minutes.
 - An extended nightly run (every platform cell, emulators and simulators, long fuzzing) may take longer, at most two hours. It is not a required check.
+- Scheduled runs use the repository's slot in [docs/ci-schedule.md](ci-schedule.md), so the organization's shared runners are not all asked for at the same minute.
 
 Over budget, tests are pruned or merged before anything else is added.
 

@@ -12,7 +12,7 @@ on:
     branches: [main]
     paths: [maul/**, .github/workflows/maul-family.yml]
   schedule:
-    - cron: "41 3 * * *"
+    - cron: "13 7 * * *"
   workflow_dispatch:
 
 permissions: {}
