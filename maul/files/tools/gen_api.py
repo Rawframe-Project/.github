@@ -126,12 +126,12 @@ def render_comment(comment):
             if prose[-1]:
                 prose.append([])
             continue
-        tag = re.match(r"@(param|return|par)\b\s*(.*)$", line)
-        if tag and tag.group(1) == "param":
+        tag = re.match(r"@(param|returns?|par)(?:\[\w+\])?(?=\s|$)\s*(.*)$", line)
+        if tag and tag.group(1).startswith("param"):
             name, _, text = tag.group(2).partition(" ")
             params.append([name, text.strip()])
             current = params[-1]
-        elif tag and tag.group(1) == "return":
+        elif tag and tag.group(1).startswith("return"):
             returns.append(tag.group(2))
             current = returns
         elif tag:
@@ -148,7 +148,7 @@ def render_comment(comment):
     if params:
         out += ["Parameters:", ""] + ["- `%s`: %s" % (name, text) for name, text in params] + [""]
     if returns:
-        out += ["Returns " + " ".join(returns), ""]
+        out += ["Returns: " + " ".join(returns), ""]
     for title, text in pars:
         out += ["*" + title + ".* " + text if title else text, ""]
     return out
