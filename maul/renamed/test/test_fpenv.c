@@ -137,8 +137,8 @@ static void TestHostCode(TestFloatSetting host, TestFloatSetting other)
     // Host code that changes its setting: the outermost leave restores the
     // host's from its entry all the same.
     TestFloatSet(host);
-    // Only the register changes: the host's <fenv.h> mode (x87's control
-    // word on x86) is the host code's own, which the library never sets.
+    // Only the register changes: the host's <fenv.h> mode is the host
+    // code's own, which the library sets only inside an entry.
     callback.change = true;
     callback.changeTo = (TestFloatSetting){host.rounding, other.control};
     callback.host = host;
