@@ -141,7 +141,7 @@ Over budget, tests are pruned or merged before anything else is added.
 - The owner and the manager set milestones. Product sessions split them into issues and order Ready.
 - A session takes the top issue of its repository's Ready column, assigns itself, moves it to In progress, and works on that one issue only.
 - The issue body is the progress record: a short problem statement and a checklist the session updates. Findings that matter later go into the issue as comments, not into files.
-- Labels: `bug`, `feature`, `docs`, `performance`, `security`, `chore`, `blocked`, `accepted` (an outside request a maintainer approved), `duplicate`, `wontfix`. `tools/repo-setup.sh` applies them with the merge settings and the ruleset. Questions for the owner are never written in a public repository; they go to the manager.
+- Labels: `bug`, `feature`, `docs`, `test` (a missing or weak test), `performance`, `security`, `chore`, `blocked`, `accepted` (an outside request a maintainer approved), `duplicate`, `wontfix`. `tools/repo-setup.sh` applies them with the merge settings and the ruleset. Questions for the owner are never written in a public repository; they go to the manager.
 
 ## Sessions
 
