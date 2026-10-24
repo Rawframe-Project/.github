@@ -27,6 +27,7 @@ runs:
       env:
         EXCLUDE: ${{ inputs.exclude }}
       run: |
+        set -f
         args=()
         for e in $EXCLUDE; do args+=(--exclude "$e"); done
         python3 "$GITHUB_ACTION_PATH/../../../scripts/docs_check.py" "${args[@]}"
