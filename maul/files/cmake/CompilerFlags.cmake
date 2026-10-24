@@ -70,8 +70,10 @@ function(maul_apply_flags target)
         # precision (FLT_EVAL_METHOD 2), which fpenv.c refuses. SSE math
         # gives every operation its declared type there, as on every other
         # target. An -m32 build on an x86-64 host keeps the host's
-        # processor name, so the pointer size tells it apart.
-        if(CMAKE_SIZEOF_VOID_P EQUAL 4 AND CMAKE_SYSTEM_PROCESSOR MATCHES "^([iI][3-6]86|x86|X86|x86_64|AMD64|amd64)$")
+        # processor name, so the pointer size tells it apart. Emscripten's
+        # toolchain names the processor x86 too, but it targets wasm32.
+        if(CMAKE_SIZEOF_VOID_P EQUAL 4 AND NOT EMSCRIPTEN
+           AND CMAKE_SYSTEM_PROCESSOR MATCHES "^([iI][3-6]86|x86|X86|x86_64|AMD64|amd64)$")
             target_compile_options(${target} PRIVATE -msse2 -mfpmath=sse)
         endif()
         if(${MAUL_PREFIX}_WERROR)
