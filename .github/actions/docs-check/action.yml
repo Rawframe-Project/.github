@@ -1,0 +1,32 @@
+name: docs check
+description: Checks a repository against the documentation rules of the repository standard.
+
+# Use from a job that has checked out the repository:
+#   steps:
+#     - uses: actions/checkout@<sha> # vX
+#       with:
+#         persist-credentials: false
+#     - uses: Rawframe-Project/.github/.github/actions/docs-check@<sha> # v0.0.N
+#       with:
+#         exclude: third_party vendor
+#
+# The check runs scripts/docs_check.py from the same commit as this action,
+# so a repository's pin fixes the rules it is held to.
+
+inputs:
+  exclude:
+    description: Space-separated path prefixes to skip, such as vendored code.
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Check documentation
+      shell: bash
+      env:
+        EXCLUDE: ${{ inputs.exclude }}
+      run: |
+        args=()
+        for e in $EXCLUDE; do args+=(--exclude "$e"); done
+        python3 "$GITHUB_ACTION_PATH/../../../scripts/docs_check.py" "${args[@]}"
