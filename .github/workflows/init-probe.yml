@@ -1,0 +1,13 @@
+name: init-probe
+on: pull_request
+permissions: {}
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    container: ${{ fromJSON('{"image":"ghcr.io/rawframe-project/ci-cpp:2026.10.6@sha256:50c383f608f992c272196139d749f15978e35143a2876362b1e0aef6993480bd","options":"--init"}') }}
+    steps:
+      - run: |
+          cat /proc/1/comm
+          sh -c 'sleep 30 & echo $! > /tmp/p' ; sleep 1; kill "$(cat /tmp/p)"; sleep 1
+          if [ -e "/proc/$(cat /tmp/p)" ]; then echo "zombie left: $(cat /proc/$(cat /tmp/p)/stat)"; exit 1; else echo "orphan reaped"; fi
