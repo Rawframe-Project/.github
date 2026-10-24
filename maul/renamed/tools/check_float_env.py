@@ -20,11 +20,11 @@
 #     <prefix>FloatEnvLeave(env);
 #     [return result;]
 #
-# with any names, arguments that are names, addresses of names, casts of
-# names or plain constants, and a worker the sources declare
+# with any names; arguments that are names, addresses of names, pointer
+# casts of names or plain constants, since even a conversion to a float
+# type rounds in the host's setting; and a worker the sources declare
 # <MACRO>_NOINLINE, so the compiler cannot move its arithmetic across
-# the register writes. A single <prefix>FloatEnvRun(...) statement is a
-# wrapper too. The allowed list gives names, never patterns, under the
+# the register writes. The allowed list gives names, never patterns, under the
 # reason they need not enter: a reason is a line ending in a colon, its
 # names indented below it:
 #
@@ -65,8 +65,7 @@ MACRO = cmake_setting("MAUL_MACRO_PREFIX")
 GUARD = re.compile(r"\b" + PREFIX + r"FloatEnv(?:Enter|Run)\b")
 ENTER = re.compile(r"(?:const )?uint64_t (\w+) = " + PREFIX + r"FloatEnvEnter\(\)")
 CALL = re.compile(r"(?:(?:const )?[\w ]+?[\s*]+(\w+) = )?(\w+)\((.*)\)")
-RUN = re.compile(r"(?:return )?" + PREFIX + r"FloatEnvRun\(.*\)")
-ARGUMENT = re.compile(r"&?\w+|\([\w ]+\*?\)\s*\w+|\d+[uUlLfF]*")
+ARGUMENT = re.compile(r"&?\w+|\((?:const )?[\w ]+\*+\s*(?:const\s*)?\)\s*\w+|\d+[uUlLfF]*")
 
 
 def statements(body):
@@ -84,24 +83,23 @@ def statements(body):
 
 
 def arguments(text):
-    """A call's arguments, split at their top level."""
+    """A call's arguments, split at their top level; an empty one kept."""
     result, depth, current = [], 0, ""
     for c in text:
-        depth += {"(": 1, ")": -1}.get(c, 0)
+        depth += {"(": 1, ")": -1, "{": 1, "}": -1}.get(c, 0)
         if c == "," and depth == 0:
             result.append(current.strip())
             current = ""
         else:
             current += c
-    return [a for a in result + [current.strip()] if a]
+    result.append(current.strip())
+    return result if any(result) else []
 
 
 def wrapper_worker(body):
-    """The worker a wrapper body calls, "" for a FloatEnvRun wrapper, or
-    None when the body is not of the wrapper's shape."""
+    """The worker a wrapper body calls, or None when the body is not of
+    the wrapper's shape."""
     s = statements(body)
-    if len(s) == 1 and RUN.fullmatch(s[0]):
-        return ""
     enter = ENTER.fullmatch(s[0]) if s else None
     if not enter or len(s) not in (3, 4):
         return None
@@ -196,9 +194,10 @@ def expand_macros(text):
             if depth == 0:
                 break
         params, body = macros[match.group(1)]
-        values = arguments(text[match.end():i - 1])
-        for param, value in zip(params, values):
-            body = re.sub(r"\b" + re.escape(param) + r"\b", lambda _: value, body)
+        values = dict(zip(params, arguments(text[match.end():i - 1])))
+        if values:
+            body = re.sub(r"\b(" + "|".join(map(re.escape, values)) + r")\b",
+                          lambda m: values[m.group(1)], body)
         out.append(text[last:match.start()] + "\n" * text.count("\n", match.start(), i))
         moved.append((re.sub(r"\s*##\s*", "", body), text.count("\n", 0, match.start()) + 1))
         last = i
