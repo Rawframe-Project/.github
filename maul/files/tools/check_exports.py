@@ -3,19 +3,27 @@
 # Copyright (c) 2026 Sirac Ozmen
 #
 # The symbols a shared build exports are the public functions, no more
-# and no fewer: every function the public headers declare, and nothing
-# else, so internal functions, tables and globals stay out of the binary
-# interface. The headers are the ones tools/gen_api.py reads: the
-# library's include/<MAUL_LIBRARY>/ and each part's that
-# tools/source-dirs.txt lists. Their functions are what gen_api.collect
-# finds, less the static inline helpers, which no library exports; the
-# library's name and prefix come from CMakeLists.txt through it. Every
-# defined dynamic symbol counts, whatever its name or kind, and a
-# versioned one by its name before the '@': one without the prefix, one
-# holding data, or one no header declares fails it, as does a declared
-# function missing from the library. Each failure names the symbol.
+# and no fewer: every function the library's public headers declare with
+# its API macro, and nothing else, so internal functions, tables and
+# globals stay out of the binary interface. The headers are the ones in
+# include/<MAUL_LIBRARY>/ that tools/gen_api.py reads. A part
+# tools/source-dirs.txt lists is a library of its own and is not counted.
+# Their functions are what gen_api.collect finds, less the static inline
+# helpers, which no library exports, and less a declaration without the
+# API macro, which the program defines and the library calls. The
+# library's name and prefixes come from CMakeLists.txt through gen_api.
+# A header whose functions the build leaves out, such as a platform's
+# adapter on another platform or a companion static library, is named
+# with --exclude; an excluded header that is missing, or one whose
+# functions the library exports, fails the check, so the list stays
+# true. Every defined dynamic symbol counts, whatever its name or kind,
+# and a versioned one by its name before the '@': one without the
+# prefix, one holding data, or one no header declares fails it, as does
+# a declared function missing from the library. Each failure names the
+# symbol.
 #
-#   python3 tools/check_exports.py [--nm NM] out/linux-shared/lib<library>.so
+#   python3 tools/check_exports.py [--nm NM] [--exclude HEADER ...] \
+#       out/linux-shared/lib<library>.so
 #
 # Reads the dynamic symbol table with nm (CMake passes CMAKE_NM); for ELF
 # shared libraries.
@@ -33,20 +41,27 @@ import gen_api  # noqa: E402
 CODE = set("TtWw")
 
 
-def declared():
-    """The names of the functions the public headers declare."""
-    names = set()
-    sections = [(gen_api.HEADER_DIR, gen_api.LIB)]
-    sections += [(folder, name) for name, folder in gen_api.parts()]
-    for folder, umbrella in sections:
-        for header in gen_api.header_order(folder, umbrella):
-            with open(os.path.join(folder, header), encoding="utf-8") as f:
-                lines = f.read().split("\n")
-            for _, signature in gen_api.collect(lines):
-                found = re.search(r"\b(" + gen_api.PREFIX + r"\w+)\s*\(", signature)
-                if found and "static" not in signature[:found.start()].split():
-                    names.add(found.group(1))
-    return names
+def declared(excluded):
+    """The names of the functions the library's public headers declare
+    with its API macro, and those of the excluded headers, by header."""
+    macro = re.compile(r"\b" + gen_api.cmake_setting("MAUL_MACRO_PREFIX") + r"_API\b[\w\s*]*?\b("
+                       + gen_api.PREFIX + r"\w+)\s*\(")
+    public, left_out = set(), {}
+    for header in gen_api.header_order(gen_api.HEADER_DIR, gen_api.LIB):
+        with open(os.path.join(gen_api.HEADER_DIR, header), encoding="utf-8") as f:
+            text = f.read()
+        marked = set(macro.findall(text))
+        names = set()
+        for _, signature in gen_api.collect(text.split("\n")):
+            found = re.search(r"\b(" + gen_api.PREFIX + r"\w+)\s*\(", signature)
+            if (found and found.group(1) in marked
+                    and "static" not in signature[:found.start()].split()):
+                names.add(found.group(1))
+        if header in excluded:
+            left_out[header] = names
+        else:
+            public |= names
+    return public, left_out
 
 
 def exported(nm, library):
@@ -71,18 +86,25 @@ def exported(nm, library):
 def main():
     parser = argparse.ArgumentParser(description="Checks a shared library's exports.")
     parser.add_argument("--nm", default="nm", help="the nm to read the library with")
+    parser.add_argument("--exclude", action="append", default=[], metavar="HEADER",
+                        help="a header in include/<library>/ whose functions the build leaves out")
     parser.add_argument("library")
     args = parser.parse_args()
-    public = declared()
+    public, left_out = declared(set(args.exclude))
     symbols = exported(args.nm, args.library)
     prefix = gen_api.PREFIX
     wrong = []
+    for header in sorted(set(args.exclude) - left_out.keys()):
+        wrong.append(f"excluded but not a public header: {header}")
+    for header, names in sorted(left_out.items()):
+        for name in sorted(names & symbols.keys()):
+            wrong.append(f"exported but its header {header} is excluded: {name}")
     for name, letter in sorted(symbols.items()):
         if not name.startswith(prefix):
             wrong.append(f"exported without the {prefix} prefix: {name}")
         elif letter not in CODE:
             wrong.append(f"exported data: {name}")
-        elif name not in public:
+        elif name not in public and not any(name in n for n in left_out.values()):
             wrong.append(f"exported but not public: {name}")
     for name in sorted(public - symbols.keys()):
         wrong.append(f"public but not exported: {name}")
