@@ -2,15 +2,15 @@
 #   directory  api-prefix  macro-prefix  option-prefix  renamed files it uses
 # The directory is the checkout under this workspace and the library's
 # name (include/<directory>/). Renamed files come from family/renamed/.
-maul2d       m2    M2    MAUL2D        src/cpu.c src/cpu.h src/hash.c src/simd.h src/fpenv.c src/fpenv.h test/test_fenv.h test/test_fpenv.c
-maul3d       m3    M3    MAUL3D        src/cpu.c src/cpu.h src/hash.c src/simd.h src/fpenv.c src/fpenv.h test/test_fenv.h test/test_fpenv.c
+maul2d       m2    M2    MAUL2D        src/cpu.c src/cpu.h src/hash.c src/simd.h src/fpenv.c src/fpenv.h test/test_fenv.h test/test_fpenv.c tools/check_float_env.py
+maul3d       m3    M3    MAUL3D        src/cpu.c src/cpu.h src/hash.c src/simd.h src/fpenv.c src/fpenv.h test/test_fenv.h test/test_fpenv.c tools/check_float_env.py
 maul-unicode muni  MUNI  MAUL_UNICODE
 maul-window  mwin  MWIN  MAUL_WINDOW
 maul-rhi     mrhi  MRHI  MAUL_RHI
-maul-ui      mui   MUI   MAUL_UI       src/inflate.c src/inflate.h test/test_inflate.c src/generated/inflate_tables.h tools/gen_inflate_tables.py src/fpenv.c src/fpenv.h test/test_fenv.h test/test_fpenv.c
-maul-audio   maud  MAUD  MAUL_AUDIO    src/fpenv.c src/fpenv.h test/test_fenv.h test/test_fpenv.c
-maul-nav     mnav  MNAV  MAUL_NAV      src/hash.c src/fpenv.c src/fpenv.h test/test_fenv.h test/test_fpenv.c
+maul-ui      mui   MUI   MAUL_UI       src/inflate.c src/inflate.h test/test_inflate.c src/generated/inflate_tables.h tools/gen_inflate_tables.py src/fpenv.c src/fpenv.h test/test_fenv.h test/test_fpenv.c tools/check_float_env.py
+maul-audio   maud  MAUD  MAUL_AUDIO    src/fpenv.c src/fpenv.h test/test_fenv.h test/test_fpenv.c tools/check_float_env.py
+maul-nav     mnav  MNAV  MAUL_NAV      src/hash.c src/fpenv.c src/fpenv.h test/test_fenv.h test/test_fpenv.c tools/check_float_env.py
 maul-locale  mloc  MLOC  MAUL_LOCALE
-maul-anim    mani  MANI  MAUL_ANIM     src/cpu.c src/cpu.h src/hash.c src/simd.h src/inflate.c src/inflate.h test/test_inflate.c src/generated/inflate_tables.h tools/gen_inflate_tables.py src/elementary_float.c src/elementary_float.h src/generated/math_constants.h src/generated/math_constants_float.h tools/gen_math_constants.py test/test_math_float.c src/fpenv.c src/fpenv.h test/test_fenv.h test/test_fpenv.c
-maul-vfx     mvfx  MVFX  MAUL_VFX      src/hash.c src/fpenv.c src/fpenv.h test/test_fenv.h test/test_fpenv.c
-maul-tween   mtwn  MTWN  MAUL_TWEEN    src/elementary.c src/elementary.h src/elementary_float.c src/elementary_float.h src/generated/math_constants.h src/generated/math_constants_float.h tools/gen_math_constants.py test/test_math.c test/test_math_float.c src/fpenv.c src/fpenv.h test/test_fenv.h test/test_fpenv.c
+maul-anim    mani  MANI  MAUL_ANIM     src/cpu.c src/cpu.h src/hash.c src/simd.h src/inflate.c src/inflate.h test/test_inflate.c src/generated/inflate_tables.h tools/gen_inflate_tables.py src/elementary_float.c src/elementary_float.h src/generated/math_constants.h src/generated/math_constants_float.h tools/gen_math_constants.py test/test_math_float.c src/fpenv.c src/fpenv.h test/test_fenv.h test/test_fpenv.c tools/check_float_env.py
+maul-vfx     mvfx  MVFX  MAUL_VFX      src/hash.c src/fpenv.c src/fpenv.h test/test_fenv.h test/test_fpenv.c tools/check_float_env.py
+maul-tween   mtwn  MTWN  MAUL_TWEEN    src/elementary.c src/elementary.h src/elementary_float.c src/elementary_float.h src/generated/math_constants.h src/generated/math_constants_float.h tools/gen_math_constants.py test/test_math.c test/test_math_float.c src/fpenv.c src/fpenv.h test/test_fenv.h test/test_fpenv.c tools/check_float_env.py
