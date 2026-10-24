@@ -277,7 +277,8 @@ static void TestX87(TestFloatSetting host)
     uint64_t after = @P@FloatControlRead();
     @P@FloatControlWrite(start);
     CHECK(ldexpInside == 0x1p-1025, "the C library's x87 code rounds to nearest inside an entry");
-    CHECK((inside & 0xf3fu) == 0x33fu, "the x87 word inside: nearest, 64-bit precision, all masked");
+    CHECK((inside & 0xf3fu) == 0x33fu,
+          "the x87 word inside: nearest, 64-bit precision, all masked");
     CHECK(after == hostWord, "the leave gives the host its whole x87 word back");
 }
 #else

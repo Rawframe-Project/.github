@@ -4,17 +4,17 @@
 // x86 keeps the environment in MXCSR: flush-to-zero is bit 15,
 // denormals-are-zero bit 6, the rounding mode bits 13 and 14, the
 // exception masks bits 7 to 12. On 32-bit x86 the C library's math
-// functions also compute on the x87 unit (glibc's ldexp, for one), which
-// rounds by its own control word: there the environment is MXCSR in the
-// low 32 bits and the x87 control word in bits 32 to 47, set to round to
-// nearest with every exception masked and 64-bit precision, the C
-// library's own default there, which its math functions assume. AArch64 keeps it in FPCR: flush-to-zero
-// is bit 24, half-precision flush-to-zero bit 19, default NaN bit 25, the
-// rounding mode bits 22 and 23, the trap enables bits 8 to 12 and 15, and
-// with FEAT_AFP input flush and alternate handling bits 0 and 1.
-// WebAssembly has one environment, the one the library needs. Any other
-// architecture is refused at build time rather than computed in an
-// unknown environment.
+// functions also compute on the x87 unit (glibc's ldexp, for one),
+// which rounds by its own control word: there the environment is MXCSR
+// in the low 32 bits and the x87 control word in bits 32 to 47, set to
+// round to nearest with every exception masked and 64-bit precision,
+// the C library's own default there, which its math functions assume.
+// AArch64 keeps it in FPCR: flush-to-zero is bit 24, half-precision
+// flush-to-zero bit 19, default NaN bit 25, the rounding mode bits 22
+// and 23, the trap enables bits 8 to 12 and 15, and with FEAT_AFP input
+// flush and alternate handling bits 0 and 1. WebAssembly has one
+// environment, the one the library needs. Any other architecture is
+// refused at build time rather than computed in an unknown environment.
 //
 // The thread's place in the entries is a thread-local, the only state of
 // src/ (the family's rules allow it here alone): it mirrors the control
@@ -72,6 +72,7 @@ enum
 
 // No CI cell builds MSVC for 32-bit x86, so its __asm path is untried.
 #if defined(_MSC_VER) && !defined(__clang__)
+// clang-format off: MSVC's __asm statement ends at the line's end.
 static uint16_t ReadX87(void)
 {
     uint16_t value = 0;
@@ -82,6 +83,7 @@ static void WriteX87(uint16_t value)
 {
     __asm fldcw value
 }
+// clang-format on
 #else
 static uint16_t ReadX87(void)
 {
@@ -118,7 +120,8 @@ static uint64_t Wanted(uint64_t control)
 {
     uint32_t clear = s_flushToZero | s_denormalsAreZero | s_roundingMode;
     uint32_t mxcsr = ((uint32_t)control & ~clear) | s_exceptionMasks;
-    uint32_t x87 = ((uint32_t)(control >> 32) & ~(uint32_t)s_x87Rounding) | s_x87Masks | s_x87Precision;
+    uint32_t x87 =
+        ((uint32_t)(control >> 32) & ~(uint32_t)s_x87Rounding) | s_x87Masks | s_x87Precision;
     return mxcsr | ((uint64_t)(x87 & 0xffffu) << 32);
 }
 
