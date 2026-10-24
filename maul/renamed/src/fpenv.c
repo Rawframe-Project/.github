@@ -7,8 +7,8 @@
 // functions also compute on the x87 unit (glibc's ldexp, for one), which
 // rounds by its own control word: there the environment is MXCSR in the
 // low 32 bits and the x87 control word in bits 32 to 47, set to round to
-// nearest with every exception masked and 64-bit precision, so a value
-// is rounded once, when it is stored to its type. AArch64 keeps it in FPCR: flush-to-zero
+// nearest with every exception masked and 64-bit precision, the C
+// library's own default there, which its math functions assume. AArch64 keeps it in FPCR: flush-to-zero
 // is bit 24, half-precision flush-to-zero bit 19, default NaN bit 25, the
 // rounding mode bits 22 and 23, the trap enables bits 8 to 12 and 15, and
 // with FEAT_AFP input flush and alternate handling bits 0 and 1.
