@@ -52,6 +52,12 @@ on:
         description: The job's timeout in minutes.
         type: number
         default: 20
+      logs:
+        description: >-
+          More paths to upload with the test logs when the job fails, one per
+          line, such as the logs of a server a test fixture starts.
+        type: string
+        default: ""
 
 permissions: {}
 
@@ -156,7 +162,9 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: logs-${{ inputs.preset }}
-          path: out/${{ inputs.preset }}/Testing/Temporary/
+          path: |
+            out/${{ inputs.preset }}/Testing/Temporary/
+            ${{ inputs.logs }}
           if-no-files-found: ignore
           retention-days: 7
 
