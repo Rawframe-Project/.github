@@ -277,10 +277,13 @@ def check_shell(findings):
         else:
             print(f"shell scripts: shellcheck is not installed, {len(scripts)} script(s) not checked")
         return
-    result = subprocess.run(["shellcheck", "-S", "warning", "-f", "gcc", *scripts],
+    names = [os.path.relpath(path, ROOT) for path in scripts]
+    result = subprocess.run(["shellcheck", "-S", "warning", "-f", "gcc", *names],
                             cwd=ROOT, capture_output=True, text=True)
-    for line in result.stdout.splitlines():
-        findings.append(os.path.relpath(line, ROOT) if line.startswith(ROOT) else line)
+    findings.extend(result.stdout.splitlines())
+    if result.returncode not in (0, 1):
+        findings.append(f"shellcheck could not check the scripts (exit {result.returncode}): "
+                        + result.stderr.strip())
 
 
 def main():
