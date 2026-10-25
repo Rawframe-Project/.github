@@ -8,14 +8,14 @@ ARG DEBIAN_FRONTEND=noninteractive
 # Set by the builder: amd64 or arm64. The image is built for both.
 ARG TARGETARCH
 
-# Compilers, the build tools, shellcheck for the shell scripts, and the libraries the families' optional
-# components and tests link: X11, Wayland and XCB for windows, ALSA, Pulse
-# and PipeWire for audio, lavapipe and the validation layers for Vulkan,
-# HarfBuzz and ICU as test oracles, a D-Bus daemon for tests that start a
-# private session bus, a private PipeWire and PulseAudio sound server
-# with ALSA's PulseAudio plugin for audio integration tests, LLVM's tools
-# for symbolized sanitizer stacks and coverage, and what headless Chrome
-# needs to launch.
+# Compilers, the build tools, shellcheck for the shell scripts, and the
+# libraries the families' optional components and tests link: X11, Wayland
+# and XCB for windows, ALSA, Pulse and PipeWire for audio, lavapipe and the
+# validation layers for Vulkan, HarfBuzz and ICU as test oracles, a D-Bus
+# daemon for tests that start a private session bus, a private PipeWire and
+# PulseAudio sound server with ALSA's PulseAudio plugin for audio
+# integration tests, LLVM's tools for symbolized sanitizer stacks and
+# coverage, and what headless Chrome needs to launch.
 RUN apt-get update -q \
     && apt-get install -y -q --no-install-recommends \
         ca-certificates curl git git-lfs xz-utils unzip file \
