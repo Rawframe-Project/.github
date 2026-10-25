@@ -1,11 +1,9 @@
 name: docs check
 
-# Reusable: call from a repository with
-#   jobs:
-#     docs:
-#       uses: Rawframe-Project/.github/.github/workflows/docs-check.yml@main
-#       with:
-#         exclude: third_party vendor
+# Superseded by the docs-check action (.github/actions/docs-check), which
+# runs the script from the commit a repository pins. This workflow checks out
+# this repository with no ref, so it runs the script from main whatever its
+# caller pins. It stays until every caller has moved to the action.
 
 on:
   workflow_call:
