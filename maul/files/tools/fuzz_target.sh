@@ -14,8 +14,14 @@
 # finding this prints only the target, its seed, the finding's file name
 # (the SHA-1 of the input), the sanitizers' runtime error lines and the
 # report from its "==PID== ERROR:" line to its "SUMMARY:" line, all
-# taken from the log above libFuzzer's first input dump. It exits 0 when
-# the target found nothing and 1 when it found something.
+# taken from the log above libFuzzer's first input dump. It writes that
+# report to out/fuzz-reports/NAME.txt, prints an error line, and exits 1;
+# it exits 0 when the target found nothing. A job that runs targets side
+# by side prints the reports once they have all finished, so no report
+# interleaves with another at any length:
+#
+#   printf '%s\n' out/fuzz/fuzz_* | xargs -P 4 -I {} tools/fuzz_target.sh {} ...
+#   status=$?; cat out/fuzz-reports/*.txt 2>/dev/null; exit "$status"
 #
 # A finding is reproduced by running the same target from the same
 # corpus with the printed seed until it finds the same file name.
@@ -31,7 +37,7 @@ name=$(basename "$target")
 out=${OUT:-out}
 crashes="$out/fuzz-crashes/$name"
 log="$out/fuzz-logs/$name.log"
-mkdir -p "$crashes" "$out/fuzz-logs"
+mkdir -p "$crashes" "$out/fuzz-logs" "$out/fuzz-reports"
 
 seed=$(($(od -An -N4 -tu4 /dev/urandom) % 2147483647 + 1))
 if "$target" -seed="$seed" -artifact_prefix="$crashes/" "$@" >"$log" 2>&1; then
@@ -42,14 +48,11 @@ fi
 # Everything from the first mutation line on is libFuzzer's dump of the
 # input; no line of it is read.
 head=$(sed '/^MS: [0-9]/,$d' "$log")
-report=$(
+{
   echo "$name: seed $seed"
   find "$crashes" -maxdepth 1 -type f -printf '%f\n' | sort
   grep -E -m 5 '^[^ ]+:[0-9]+:[0-9]+: runtime error: ' <<<"$head" || true
   sed -n '/^==[0-9]*== *ERROR: /,/^SUMMARY: /p' <<<"$head" | head -n 80
-  echo "::error::$name found something"
-)
-# One write, so that targets run side by side do not interleave a short
-# report.
-printf '%s\n' "$report"
+} >"$out/fuzz-reports/$name.txt"
+echo "::error::$name found something (seed $seed)"
 exit 1
