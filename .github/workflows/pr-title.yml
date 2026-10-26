@@ -31,6 +31,7 @@ jobs:
           TITLE: ${{ github.event.pull_request.title }}
           SCOPES: ${{ inputs.scopes }}
           AUTHOR: ${{ github.event.pull_request.user.login }}
+          BODY: ${{ github.event.pull_request.body }}
         run: |
           python3 - <<'EOF'
           import os, re, sys
@@ -52,7 +53,19 @@ jobs:
               problems.append(f"the title is {len(title)} characters, over 72")
           if "\u2014" in title:
               problems.append("the title has an em dash")
+          # The body becomes the squash commit's message, which release-please
+          # parses line by line as possible commit headers. A line that starts
+          # with a name and "(" whose scope does not close before another "("
+          # or the line's end is a parse error, and the whole commit is
+          # dropped; a line that reads as a header of a changelog type, or one
+          # marked breaking, adds an entry of its own.
+          types = "feat|fix|perf|refactor|docs|test|build|ci|chore|revert|deps"
+          for n, line in enumerate((os.environ.get("BODY") or "").splitlines(), 1):
+              if re.match(r"[^\s():!]+\([^)]*(\(|$)", line):
+                  problems.append(f"body line {n} would make release-please drop the commit (indent it or reword its start): {line[:60]}")
+              elif re.match(rf"(?i)({types})(\([^()]*\))?!?:\s|[^\s():!]+(\([^()]*\))?!:", line):
+                  problems.append(f"body line {n} reads to release-please as a commit header of its own: {line[:60]}")
           for p in problems:
-              print(f"pull request title: {p}")
+              print(f"pull request: {p}")
           sys.exit(1 if problems else 0)
           EOF

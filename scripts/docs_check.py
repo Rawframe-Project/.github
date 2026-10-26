@@ -47,15 +47,20 @@ CODE_D_NUMBER = re.compile(r"\bD(?!16\b|24\b|32\b)\d{2,4}\b(?![.\dA-Za-z])")
 # A D-number that is not an old record: a code point (U+D800, 0xD800, \uD800)
 # or a definition of the Unicode Standard (UAX #15 D114, definition D117).
 NOT_A_RECORD = re.compile(r"(?:U\+|0x|\\u|[#/])$|(?i:definition|definitions|UAX\s*#\d+|Unicode)\s*$")
+# The CIE standard illuminants D50 and D65, on a line about color.
+ILLUMINANT = re.compile(r"(?i)\b(?:white\s*point|illuminant|CIE|daylight|sRGB|XYZ|Lab|color|colour)\b")
+
+
+def not_a_record(line, m):
+    if NOT_A_RECORD.search(line[max(0, m.start() - 24):m.start()]):
+        return True
+    return m.group(0) in ("D50", "D65") and bool(ILLUMINANT.search(line))
 
 
 def cites_record(line):
     if CODE_FORBIDDEN.search(line):
         return True
-    for m in CODE_D_NUMBER.finditer(line):
-        if not NOT_A_RECORD.search(line[max(0, m.start() - 24):m.start()]):
-            return True
-    return False
+    return any(not not_a_record(line, m) for m in CODE_D_NUMBER.finditer(line))
 CODE_SUFFIXES = {".c", ".h", ".cpp", ".hpp", ".cc", ".inl", ".py", ".sh", ".cmake", ".kest",
                  ".js", ".ts", ".java", ".kt", ".m", ".mm", ".swift", ".yml", ".yaml"}
 
@@ -151,8 +156,7 @@ def main():
                 if f == "CHANGELOG.md" and "date" in why:
                     continue
                 if "decision or work number" in why and not any(
-                        not NOT_A_RECORD.search(line[max(0, m.start() - 24):m.start()])
-                        for m in pattern.finditer(line)):
+                        not not_a_record(line, m) for m in pattern.finditer(line)):
                     continue
                 if pattern.search(line):
                     problems.append(f"{f}: {why}: {line.strip()[:80]}")
