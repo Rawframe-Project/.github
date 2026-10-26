@@ -70,7 +70,8 @@ head=$(sed '/^MS: [0-9]/,$d' "$log")
   find "$crashes" -maxdepth 1 -type f -newer "$stamp" -printf '%f\n' |
     sed 's/-.*//' | sort | uniq -c
   grep -E -m 5 '^[^ ]+:[0-9]+:[0-9]+: runtime error: ' <<<"$head" || true
-  sed -n '/^==[0-9]*== *ERROR: /,/^SUMMARY: /p' <<<"$head" | head -n 80
+  # head may close the pipe early on a long report; that is not an error.
+  sed -n '/^==[0-9]*== *ERROR: /,/^SUMMARY: /p' <<<"$head" | head -n 80 || true
 } >"$report"
 echo "::error::$name found something"
 exit 1
