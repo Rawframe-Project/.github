@@ -53,36 +53,48 @@ def shared_files():
             yield os.path.relpath(os.path.join(folder, name), FILES)
 
 
+def executable(path):
+    return bool(os.stat(path).st_mode & 0o111)
+
+
 def expected(library, info):
-    """(relative path, bytes) for every file the library must carry."""
+    """(relative path, bytes, executable) for every file the library must carry."""
     for rel in shared_files():
-        with open(os.path.join(FILES, rel), "rb") as f:
-            yield rel, f.read()
+        source = os.path.join(FILES, rel)
+        with open(source, "rb") as f:
+            yield rel, f.read(), executable(source)
     for rel in info["renamed"]:
-        with open(os.path.join(RENAMED, rel), encoding="utf-8") as f:
+        source = os.path.join(RENAMED, rel)
+        with open(source, encoding="utf-8") as f:
             text = f.read()
         text = (text.replace("@OPT@", info["OPT"]).replace("@LIB@", library)
                 .replace("@PP@", info["PP"]).replace("@P@", info["P"]))
-        yield rel, text.encode("utf-8")
+        yield rel, text.encode("utf-8"), executable(source)
 
 
 def sync(library, info, base, write):
     differences = 0
-    for rel, content in expected(library, info):
+    for rel, content, runs in expected(library, info):
         path = os.path.join(base, rel)
         current = None
         if os.path.exists(path):
             with open(path, "rb") as f:
                 current = f.read()
-        if current == content:
+        # A script that loses its executable bit fails where it is run, so
+        # the mode is part of the copy.
+        if current == content and executable(path) == runs:
             continue
         if write:
             os.makedirs(os.path.dirname(path), exist_ok=True)
             with open(path, "wb") as f:
                 f.write(content)
+            os.chmod(path, 0o755 if runs else 0o644)
             print(f"{library}/{rel}: written")
+        elif current is None:
+            print(f"{library}/{rel}: missing")
+            differences += 1
         else:
-            print(f"{library}/{rel}: {'missing' if current is None else 'differs'}")
+            print(f"{library}/{rel}: {'differs' if current != content else 'mode differs'}")
             differences += 1
     for rel in removed():
         path = os.path.join(base, rel)
