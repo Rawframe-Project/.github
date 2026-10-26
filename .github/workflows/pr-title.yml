@@ -31,6 +31,7 @@ jobs:
           TITLE: ${{ github.event.pull_request.title }}
           SCOPES: ${{ inputs.scopes }}
           AUTHOR: ${{ github.event.pull_request.user.login }}
+          BODY: ${{ github.event.pull_request.body }}
         run: |
           python3 - <<'EOF'
           import os, re, sys
@@ -52,7 +53,14 @@ jobs:
               problems.append(f"the title is {len(title)} characters, over 72")
           if "\u2014" in title:
               problems.append("the title has an em dash")
+          # The body becomes the squash commit's message, which release-please
+          # parses: a line that starts with a name and "(" reads to it as a
+          # nested commit header, and it drops the whole commit or adds a
+          # stray changelog entry.
+          for n, line in enumerate((os.environ.get("BODY") or "").splitlines(), 1):
+              if re.match(r"`?[A-Za-z_][\w-]*\(", line):
+                  problems.append(f"body line {n} starts with a name and '(', which release-please reads as a commit header: {line[:60]}")
           for p in problems:
-              print(f"pull request title: {p}")
+              print(f"pull request: {p}")
           sys.exit(1 if problems else 0)
           EOF
