@@ -14,7 +14,10 @@
 # quarantined test that is skipped or not run, or a failure of ctest
 # itself, still fails the step: neither is a known flake, and each would
 # stop the nightly from counting the green nights a test needs to leave
-# quarantine. A build with no quarantined test passes.
+# quarantine. So does a sanitizer report or a crash on a bad address: a
+# known flake is timing or a daemon, never a memory error, and the report
+# is in the log since ctest prints a failed test's output. A build with no
+# quarantined test passes.
 set -euo pipefail
 
 if [ $# -lt 1 ]; then
@@ -34,6 +37,10 @@ if grep -E '\*\*\*(Skipped|Not Run)' "$log"; then
   echo "::error::a quarantined test did not run"
   exit 1
 fi
+if grep -E '^==[0-9]+== *ERROR: |: runtime error: |^WARNING: ThreadSanitizer: |\*\*\*Exception: (SegFault|Bus error)' "$log"; then
+  echo "::error::a quarantined test hit a sanitizer report or a crash"
+  exit 1
+fi
 # ctest exits 8 when tests ran and some failed; anything else is ctest's
 # own failure.
 if [ "$status" -ne 0 ] && [ "$status" -ne 8 ]; then
@@ -43,6 +50,10 @@ fi
 
 failed=$(sed -n '/^The following tests FAILED:/,$p' "$log" |
   sed -n 's/^[[:space:]]*[0-9]* - \([^ ]*\) .*/\1/p')
+if [ "$status" -eq 8 ] && [ -z "$failed" ]; then
+  echo "::error::ctest reported failed tests that could not be read from its output"
+  exit 1
+fi
 summary=${GITHUB_STEP_SUMMARY:-/dev/null}
 if [ -z "$failed" ]; then
   echo "Quarantined tests in $dir: all passed." >>"$summary"
