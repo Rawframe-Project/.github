@@ -80,9 +80,23 @@ def is_text(path):
 
 
 def strip_code(text):
-    """Drop fenced code blocks and inline code, where identifiers and dates are legitimate."""
-    text = re.sub(r"```.*?```", "", text, flags=re.S)
-    return re.sub(r"`[^`\n]*`", "", text)
+    """Drop fenced code blocks and inline code, where identifiers, dates and link-like text are legitimate.
+
+    A fence opens with three or more backticks or tildes and closes with a line of at least as
+    many of the same character, as CommonMark has it; an unclosed fence runs to the end."""
+    kept = []
+    fence = None
+    for line in text.split("\n"):
+        stripped = line.lstrip()
+        if fence is None:
+            m = re.match(r"(`{3,}|~{3,})", stripped)
+            if m and not (m.group(1)[0] == "`" and "`" in stripped[len(m.group(1)):]):
+                fence = m.group(1)
+                continue
+            kept.append(line)
+        elif re.fullmatch(re.escape(fence[0]) + "{" + str(len(fence)) + r",}\s*", stripped):
+            fence = None
+    return re.sub(r"`[^`\n]*`", "", "\n".join(kept))
 
 
 def main():
@@ -142,7 +156,7 @@ def main():
                 if pattern.search(line):
                     problems.append(f"{f}: {why}: {line.strip()[:80]}")
 
-        for target in LINK.findall(text):
+        for target in LINK.findall(prose):
             if re.match(r"^[a-z]+:", target) or target.startswith("#"):
                 continue
             path = (Path(f).parent / target.split("#")[0]).resolve()
