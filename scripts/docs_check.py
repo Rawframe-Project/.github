@@ -87,7 +87,8 @@ def strip_code(text):
     kept = []
     fence = None
     for line in text.split("\n"):
-        stripped = line.lstrip()
+        # A fence may sit inside a quote or a list item.
+        stripped = re.sub(r"^\s*(?:(?:>\s?|[-*+]\s+|\d+[.)]\s+)\s*)*", "", line)
         if fence is None:
             m = re.match(r"(`{3,}|~{3,})", stripped)
             if m and not (m.group(1)[0] == "`" and "`" in stripped[len(m.group(1)):]):
