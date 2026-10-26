@@ -31,7 +31,7 @@ SKILL_LIMIT = 500
 # Journal residue that never belongs in documentation.
 FORBIDDEN = [
     (re.compile(r"\b(?:D(?!16\b|24\b|32\b)\d{2,4}|[QW]\d{2,4}|F(?:2[5-9]|[3-9]\d|\d{3,4}))\b(?![.\d])"), "internal decision or work number"),
-    (re.compile(r"(?<![-\w])[a-z]{3,5}-\d{4}(?:\b(?!-)|-[a-z][\w-]*\.md)"), "an internal record number"),
+    (re.compile(r"(?<![-\w])[a-z]{3,5}-\d{4}(?:\b(?!\.\d|-)|-[a-z][\w-]*\.md)"), "an internal record number"),
     (re.compile(r"\([ADFILNQTUVW]\d{1,3}\)"), "an internal item id"),
     (re.compile(r"\b20\d\d-\d\d-\d\d\b"), "a date (history belongs in git and the changelog)"),
     (re.compile(r"(?i)\b(worklog|work log|state\.md|decisions\.md|questions\.md)\b"), "a reference to a work journal"),
@@ -41,8 +41,9 @@ FORBIDDEN = [
 # so identifiers and literals are not caught.
 # A record id stands alone: one inside a hyphenated word (a language tag
 # such as sl-rozaj-biske-1994, a unit such as gram-per-1000-meter) is not,
-# but a record's file name (mloc-0045-messages.md) is.
-CODE_FORBIDDEN = re.compile(r"\b(?:ADR|SPEC|STD|RESEARCH)-\d{4}\b|(?<![-\w])[a-z]{3,5}-\d{4}(?:\b(?!-)|-[a-z][\w-]*\.md)")
+# but a record's file name (mloc-0045-messages.md) is. Nor is a version
+# (slang-2026.19).
+CODE_FORBIDDEN = re.compile(r"\b(?:ADR|SPEC|STD|RESEARCH)-\d{4}\b|(?<![-\w])[a-z]{3,5}-\d{4}(?:\b(?!\.\d|-)|-[a-z][\w-]*\.md)")
 CODE_D_NUMBER = re.compile(r"\bD(?!16\b|24\b|32\b)\d{2,4}\b(?![.\dA-Za-z])")
 # A D-number that is not an old record: a code point (U+D800, 0xD800, \uD800)
 # or a definition of the Unicode Standard (UAX #15 D114, definition D117).
