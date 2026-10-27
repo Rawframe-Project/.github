@@ -44,14 +44,14 @@ The libraries are one product family: a program may link several of them, and a 
 - A function that can fail returns a status from the library's closed result enum, success being zero, and `PP_NODISCARD` comes first in its declaration because C++ accepts a standard attribute only there. What it produces goes through out-parameters. Where the position of a failure matters (validation, decoding, parsing) it returns a small struct with the status and the byte offset. `PResultName` names any status.
 - A status means the same in every library, so a program that links several and logs a raw value reads it one way. An error the family shares has one name, one meaning and one value everywhere:
   - `P_errorInvalid` -1: an argument a correct program never passes: a null pointer, an object of the wrong kind, a value outside the documented range of its parameter, a combination the call does not take.
-  - `P_errorCapacity` -2: storage is too small for the result, whether a pool sized at creation, a caller's buffer or the allocator. More room would succeed.
+  - `P_errorCapacity` -2: room is too small for the result: a pool sized at creation, a caller's buffer, the allocator, or a limit the caller set on a pool, a buffer or the work (a triangle budget, points per transition). More room would succeed.
   - `P_errorStale` -3: an id names an object that no longer exists.
   - `P_errorUnsupported` -4: this build, CPU, backend or device cannot do what is asked.
   - `P_errorPlatform` -5: the operating system or a driver failed or refused the call.
   - `P_errorState` -6: the call is not allowed in the object's current state, which only another call of the program changes (before a setup step, after a stream started, a recording not begun).
   - `P_errorVersion` -7: headers, a def, a file or a record come from another version of the library or its format.
   - `P_errorFormat` -8: stored or received bytes are malformed (a file, a snapshot, a tape, a catalog, a packet). Every check a reader makes on such bytes fails with this status (or `P_errorVersion`), whatever value it concerns, a bound included.
-  - `P_errorLimit` -9: an argument passes a bound the library publishes as a named constant (`P_MAX_*` or `P_*_LIMIT`: a count, a depth, a length, a magnitude). More room would not help. A range a parameter's own documentation gives, with no named constant, is `P_errorInvalid`.
+  - `P_errorLimit` -9: an argument, or its content, passes a fixed bound of the library (a count, a depth, a length, a magnitude). More room would not help. Every fixed bound a call can refuse this way is published as a named constant (`P_MAX_*` or `P_*_LIMIT`). A range a parameter's own documentation gives, with no named constant, is `P_errorInvalid`.
   - `P_errorBusy` -10: the object is in use by work under way (a step or query running on it, a callback the library is inside, a player still holding a clip), and the same call succeeds once that work ends.
 
   A library defines only the shared errors it returns, at these values, and numbers its own errors from -32 down. A library error whose name matches a shared one but whose meaning differs takes another name and an own value. Positive outcomes (`P_empty`, `P_done`) are each library's own.
