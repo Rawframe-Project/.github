@@ -65,6 +65,13 @@ jobs:
                   problems.append(f"body line {n} would make release-please drop the commit (indent it or reword its start): {line[:60]}")
               elif re.match(rf"(?i)({types})(\([^()]*\))?!?:\s|[^\s():!]+(\([^()]*\))?!:", line):
                   problems.append(f"body line {n} reads to release-please as a commit header of its own: {line[:60]}")
+          # A person's pull request explains itself in the standard's three
+          # sections; a bot's body is generated and exempt.
+          if not os.environ["AUTHOR"].endswith("[bot]"):
+              heads = set(re.findall(r"(?m)^## +(.+?)\s*$", os.environ.get("BODY") or ""))
+              for section in ("Problem", "Change", "Verification"):
+                  if section not in heads:
+                      problems.append(f"the body has no '## {section}' section")
           for p in problems:
               print(f"pull request: {p}")
           sys.exit(1 if problems else 0)
