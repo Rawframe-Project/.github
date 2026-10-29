@@ -27,7 +27,7 @@ const char* @P@GetSimdBackend(void)
 #endif
 }
 
-int32_t @P@CpuSupportsBackend(void)
+int32_t @P@IsCpuBackendSupported(void)
 {
 #if defined(@OPT@_BUILT_FOR_AVX2)
     // The AVX2 kernels need AVX2 and FMA3, and the operating system must
@@ -70,5 +70,5 @@ int32_t @P@CheckCpu(const char** backend)
     {
         *backend = @P@GetSimdBackend();
     }
-    return @P@CpuSupportsBackend();
+    return @P@IsCpuBackendSupported();
 }
