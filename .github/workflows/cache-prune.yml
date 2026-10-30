@@ -1,0 +1,59 @@
+# Deletes the Actions cache entries of main that a newer save replaced, so
+# that a repository's 10 GB keeps one entry per cache and not one per commit.
+# Without it the per-commit ccache entries fill the limit within hours and
+# GitHub evicts the least recently used entries first, which is the fuzz
+# corpus a night saved.
+#
+# An entry is replaced when its key ends in a commit (40 hex digits) or a run
+# id (9 or more digits) and a newer entry on main has the same key up to that
+# suffix. Every other entry, and every entry of another branch, is kept.
+#
+# Call it from main's runs only, after every job that saves a cache:
+#
+#   jobs:
+#     prune-caches:
+#       needs: [build, fuzz]
+#       if: always() && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+#       uses: Rawframe-Project/.github/.github/workflows/cache-prune.yml@<sha> # v<version>
+#       permissions:
+#         actions: write
+name: cache-prune
+
+on:
+  workflow_call:
+
+permissions: {}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  prune:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      actions: write
+    steps:
+      - name: Delete replaced cache entries
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh api --paginate "repos/$REPO/actions/caches?ref=refs/heads/main&per_page=100" --jq '.actions_caches[]' |
+            jq -rs '
+              def suffix: "-([0-9a-f]{40}|[0-9]{9,})$";
+              map(select(.key | test(suffix)) | .family = (.key | sub(suffix; "")))
+              | group_by(.family)[]
+              | sort_by(.created_at, .id) | .[:-1][]
+              | "\(.id) \(.key)"' >"$RUNNER_TEMP/replaced"
+          count=0
+          while read -r id key; do
+            if ! out=$(gh api -X DELETE "repos/$REPO/actions/caches/$id" 2>&1); then
+              # Another run's prune may have deleted it first.
+              grep -q 'HTTP 404' <<<"$out" || { echo "$out" >&2; exit 1; }
+              continue
+            fi
+            echo "deleted $key"; count=$((count + 1))
+          done <"$RUNNER_TEMP/replaced"
+          echo "deleted $count of $(wc -l <"$RUNNER_TEMP/replaced") replaced entries"

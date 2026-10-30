@@ -10,6 +10,7 @@ Shared files for every repository of the Rawframe Project organization.
   - `cpp.yml`: builds and tests one CMake preset, on Linux inside the CI image, with ccache and the Mesa shader cache warmed from `main`.
   - `changes.yml`: tells CI whether a pull request changes anything beyond documentation.
   - `zizmor.yml`: audits the repository's workflows.
+  - `cache-prune.yml`: deletes the cache entries of `main` that a newer save replaced.
   - `pr-gate.yml`: closes a pull request from outside the organization that does not close an `accepted` issue.
 - `maul/` holds the Maul family's shared files and `family_sync.py`, which writes them into a library; `.github/workflows/maul-family.yml` checks every migrated library against them. See `maul/README.md`.
 - `ci/cpp/` is the CI image for C and C++, published by `.github/workflows/ci-image.yml` as `ghcr.io/rawframe-project/ci-cpp:<VERSION>`.
