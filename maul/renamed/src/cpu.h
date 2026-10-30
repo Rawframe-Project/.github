@@ -8,19 +8,19 @@
 #ifndef @OPT@_SRC_CPU_H
 #define @OPT@_SRC_CPU_H
 
-#include <stdint.h>
+#include <stdbool.h>
 
 // The backend the library's vector code was built for: "avx2", "neon"
 // or "scalar". The string is static.
 const char* @P@GetSimdBackend(void);
 
-// 1 when this CPU runs the built backend, else 0.
-int32_t @P@IsCpuBackendSupported(void);
+// Whether this CPU runs the built backend.
+bool @P@IsCpuBackendSupported(void);
 
 // The CPU check without a world: stores the backend's name in *backend
-// when backend is not null and returns 1 when this CPU runs it, 0 when
-// it does not (the build should then be configured scalar). Safe from
-// any thread; it keeps no state.
-int32_t @P@CheckCpu(const char** backend);
+// when backend is not null and returns whether this CPU runs it (when it
+// does not, the build should be configured scalar). Safe from any thread;
+// it keeps no state.
+bool @P@CheckCpu(const char** backend);
 
 #endif
