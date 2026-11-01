@@ -99,10 +99,14 @@ ASSIGN_IN_CONDITION = re.compile(
 SNAKE_CASE = re.compile(r"^[a-z0-9_]+\.[chm]$")
 
 
+# A string or char literal. One pass takes both, left to right, so a '"'
+# never opens a string and a quote inside a string never opens a char.
+LITERAL = re.compile(r'"(?:[^"\\]|\\.)*"|\'(?:[^\'\\]|\\.)*\'')
+
+
 def code_text(line):
     """A C line without its // comment and its string and char literals."""
-    line = re.sub(r'"(?:[^"\\]|\\.)*"', '""', line)
-    line = re.sub(r"'(?:[^'\\]|\\.)*'", "''", line)
+    line = LITERAL.sub(lambda match: match.group(0)[0] * 2, line)
     at = line.find("//")
     return line if at < 0 else line[:at]
 
@@ -115,9 +119,7 @@ def comment_text(line):
         text = match.group(0)
         return text[0] + " " * (len(text) - 2) + text[-1]
 
-    code = re.sub(r'"(?:[^"\\]|\\.)*"', blank, line)
-    code = re.sub(r"'(?:[^'\\]|\\.)*'", blank, code)
-    at = code.find("//")
+    at = LITERAL.sub(blank, line).find("//")
     return None if at < 0 else line[at:]
 
 
