@@ -109,7 +109,14 @@ def code_text(line):
 
 def comment_text(line):
     """The // comment part of a C line, or None."""
-    code = re.sub(r'"(?:[^"\\]|\\.)*"', '""', line)
+    # Blank each literal's contents to spaces of the same length, so an
+    # offset found in the blanked line is the same offset in the line.
+    def blank(match):
+        text = match.group(0)
+        return text[0] + " " * (len(text) - 2) + text[-1]
+
+    code = re.sub(r'"(?:[^"\\]|\\.)*"', blank, line)
+    code = re.sub(r"'(?:[^'\\]|\\.)*'", blank, code)
     at = code.find("//")
     return None if at < 0 else line[at:]
 
