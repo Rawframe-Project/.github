@@ -32,9 +32,11 @@ jobs:
           SCOPES: ${{ inputs.scopes }}
           AUTHOR: ${{ github.event.pull_request.user.login }}
           BODY: ${{ github.event.pull_request.body }}
+          REPO: ${{ github.repository }}
+          BASE: ${{ github.event.pull_request.base.sha }}
         run: |
           python3 - <<'EOF'
-          import os, re, sys
+          import json, os, re, sys, urllib.error, urllib.request
           title = os.environ["TITLE"]
           scopes = os.environ["SCOPES"].split()
           types = "feat|fix|perf|refactor|docs|test|build|ci|chore"
@@ -53,6 +55,25 @@ jobs:
               problems.append(f"the title is {len(title)} characters, over 72")
           if "\u2014" in title:
               problems.append("the title has an em dash")
+          # From 1.0.0 the family ships minor and patch releases only, never
+          # 2.0.0, so a repository at 1.x takes no breaking commit: release-
+          # please would cut the next major for it. Its version is read from
+          # the base commit's release-please manifest; a repository without
+          # one is not checked.
+          major = 0
+          try:
+              url = f"https://raw.githubusercontent.com/{os.environ['REPO']}/{os.environ['BASE']}/.release-please-manifest.json"
+              with urllib.request.urlopen(url, timeout=20) as f:
+                  versions = json.load(f).values()
+              major = max(int(str(v).split(".")[0]) for v in versions)
+          except urllib.error.HTTPError as e:
+              if e.code != 404:
+                  raise
+          if major >= 1:
+              if m and title[m.end(1) + len(m.group(2) or "")] == "!":
+                  problems.append(f"the repository is at {major}.x, which takes no breaking change: make it additive and drop the '!'")
+              if re.search(r"(?m)^BREAKING[ -]CHANGE:", os.environ.get("BODY") or ""):
+                  problems.append(f"the repository is at {major}.x, which takes no breaking change: make it additive and drop the BREAKING CHANGE footer")
           # The body becomes the squash commit's message, which release-please
           # parses line by line as possible commit headers. A line that starts
           # with a name and "(" whose scope does not close before another "("
