@@ -48,8 +48,9 @@ def Patterns(prefixes):
         # first column: its specifiers and macros, bool, the name and its
         # parenthesis.
         re.compile(r"^" + specifiers + r"bool\s+(\w+)\s*\("),
-        # The same, indented: not read, so refused.
-        re.compile(r"^\s+" + specifiers + r"bool\s+(\w+)\s*\("),
+        # The same, indented, on one line or ending with bool: not read,
+        # so refused.
+        re.compile(r"^\s+" + specifiers + r"bool(?:\s+(\w+)\s*\(|\s*$)"),
         # A declaration whose line ends with bool, the name starting the
         # next line, which the next pattern reads.
         re.compile(r"^" + specifiers + r"bool\s*$"),
@@ -69,7 +70,7 @@ def Problems(text, header, prefixes):
     lines = text.splitlines()
     found = []
     for number, line in enumerate(lines, 1):
-        if indented.match(line) or re.match(r"^\s+.*\bbool\s*$", line):
+        if indented.match(line):
             found.append((number, "an indented bool declaration, which this check does not read: "
                                   "start it at the line's first column"))
             continue
@@ -148,6 +149,9 @@ def SelfTest():
         ("[[maybe_unused]] static PP_NOINLINE bool\nStep(Parser* p)", False, 1),
         ("static bool\n", False, 1),
         ("    static bool\nStep(Parser* p)", False, 1),
+        # An indented line merely ending in bool is no declaration.
+        ("    // the answer is a plain bool", True, 0),
+        ("    int width; // as wide as a bool", True, 0),
         ("[[maybe_unused]] static bool Step(Parser* p)", False, 1),
         ("PP_NODISCARD [[maybe_unused]] static bool Step(Parser* p)", False, 0),
         ("PP_NODISCARD __attribute__((unused)) bool ppA(int x);", True, 1),
