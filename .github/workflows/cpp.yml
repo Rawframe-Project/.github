@@ -52,6 +52,14 @@ on:
         description: The job's timeout in minutes.
         type: number
         default: 20
+      download-keys:
+        description: >-
+          A glob of the files that pin what the build downloads, by version
+          and SHA-256. When set, the downloads are kept in a cache keyed by
+          those files, in the folder MAUL_DOWNLOAD_DIR names to the build,
+          so a failed download does not fail the cell once they are kept.
+        type: string
+        default: ""
       logs:
         description: >-
           More paths to upload with the test logs when the job fails, one per
@@ -94,10 +102,15 @@ jobs:
       # would be read as empty.
       - name: Environment
         id: env
+        env:
+          DOWNLOAD_KEYS: ${{ inputs.download-keys }}
         run: |
           echo "CCACHE_DIR=$GITHUB_WORKSPACE/.cache/ccache" >> "$GITHUB_ENV"
           echo "CCACHE_BASEDIR=$GITHUB_WORKSPACE" >> "$GITHUB_ENV"
           echo "MESA_SHADER_CACHE_DIR=$GITHUB_WORKSPACE/.cache/mesa" >> "$GITHUB_ENV"
+          if [ -n "$DOWNLOAD_KEYS" ]; then
+            echo "MAUL_DOWNLOAD_DIR=$GITHUB_WORKSPACE/.cache/downloads" >> "$GITHUB_ENV"
+          fi
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           cpu=none
           if [ -r /proc/cpuinfo ]; then
@@ -118,6 +131,26 @@ jobs:
           path: .cache/mesa
           key: mesa-${{ inputs.runner }}-${{ inputs.preset }}-${{ steps.env.outputs.cpu }}-${{ github.sha }}
           restore-keys: mesa-${{ inputs.runner }}-${{ inputs.preset }}-${{ steps.env.outputs.cpu }}-
+
+      # A glob that matches no file would key every download cache the
+      # same, so it fails instead.
+      - name: Check download keys
+        if: inputs.download-keys != '' && hashFiles(inputs.download-keys) == ''
+        env:
+          DOWNLOAD_KEYS: ${{ inputs.download-keys }}
+        run: |
+          echo "::error::download-keys matches no file: $DOWNLOAD_KEYS"
+          exit 1
+
+      # The build checks each kept file against its pinned SHA-256 and
+      # downloads it again when it differs.
+      - name: Restore downloads
+        id: downloads
+        if: inputs.download-keys != ''
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/downloads
+          key: downloads-${{ hashFiles(inputs.download-keys) }}
 
       - name: Setup
         if: inputs.setup != ''
@@ -191,3 +224,20 @@ jobs:
         with:
           path: .cache/mesa
           key: mesa-${{ inputs.runner }}-${{ inputs.preset }}-${{ steps.env.outputs.cpu }}-${{ github.sha }}
+
+      - name: Check downloads
+        id: kept
+        if: >-
+          always() && inputs.download-keys != '' && steps.downloads.outputs.cache-hit != 'true' &&
+          github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: |
+          if [ -n "$(find .cache/downloads -type f -print -quit 2>/dev/null)" ]; then
+            echo "save=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Save downloads
+        if: always() && steps.kept.outputs.save == 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/downloads
+          key: downloads-${{ hashFiles(inputs.download-keys) }}
