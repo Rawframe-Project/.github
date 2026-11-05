@@ -55,9 +55,10 @@ on:
       download-keys:
         description: >-
           A glob of the files that pin what the build downloads, by version
-          and SHA-256. When set, the downloads are kept in a cache keyed by
-          those files, in the folder MAUL_DOWNLOAD_DIR names to the build,
-          so a failed download does not fail the cell once they are kept.
+          and SHA-256. When set, the downloads are kept in a cache keyed by the
+          runner, the preset and those files, in the folder MAUL_DOWNLOAD_DIR
+          names to the build, so a failed download does not fail the cell once
+          they are kept.
         type: string
         default: ""
       logs:
@@ -150,7 +151,7 @@ jobs:
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .cache/downloads
-          key: downloads-${{ hashFiles(inputs.download-keys) }}
+          key: downloads-${{ inputs.runner }}-${{ inputs.preset }}-${{ hashFiles(inputs.download-keys) }}
 
       - name: Setup
         if: inputs.setup != ''
@@ -228,8 +229,9 @@ jobs:
       - name: Check downloads
         id: kept
         if: >-
-          always() && inputs.download-keys != '' && steps.downloads.outputs.cache-hit != 'true' &&
-          github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+          always() && steps.downloads.outputs.cache-primary-key != '' &&
+          steps.downloads.outputs.cache-hit != 'true' && github.ref == 'refs/heads/main' &&
+          github.event_name != 'pull_request'
         run: |
           if [ -n "$(find .cache/downloads -type f -print -quit 2>/dev/null)" ]; then
             echo "save=true" >> "$GITHUB_OUTPUT"
@@ -240,4 +242,4 @@ jobs:
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .cache/downloads
-          key: downloads-${{ hashFiles(inputs.download-keys) }}
+          key: ${{ steps.downloads.outputs.cache-primary-key }}
