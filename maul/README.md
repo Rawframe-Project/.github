@@ -14,4 +14,6 @@ python3 .github/maul/family_sync.py --write maul-window
 python3 .github/maul/family_sync.py --check
 ```
 
+A library's own check compares it with the release it pins rather than with this checkout, which may have moved past it: `--ref v0.0.58` reads the family files as that tag holds them. Modes come from git's index on both sides, so a script committed without its executable bit shows on Windows too.
+
 `.github/workflows/maul-family.yml` checks every library on the repository standard against these files when they change and every night.
