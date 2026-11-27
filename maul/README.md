@@ -7,11 +7,11 @@ The files every Maul library shares, kept here once.
 - `libraries.txt` names the libraries, their prefixes and the renamed files each uses.
 - `removed.txt` lists files the family no longer shares; a library must not carry them.
 
-A change to a shared file is made here first, then each library takes it in its own pull request:
+A change to a shared file is made here first, then each library takes it in its own pull request, from the workspace root:
 
 ```sh
-python3 /home/rawframe-project/.github/maul/family_sync.py --write maul-window
-python3 /home/rawframe-project/.github/maul/family_sync.py --check
+python3 .github/maul/family_sync.py --write maul-window
+python3 .github/maul/family_sync.py --check
 ```
 
 `.github/workflows/maul-family.yml` checks every library on the repository standard against these files when they change and every night.

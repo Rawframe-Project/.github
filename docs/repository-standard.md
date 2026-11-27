@@ -145,7 +145,7 @@ Over budget, tests are pruned or merged before anything else is added.
 
 ## Sessions
 
-Each repository has one agent session, started by the owner and named after the repository.
+Each repository has one agent session, named after the repository, which the workspace starts and keeps running.
 
 - A session works when it has work: an issue in its Ready column, a message from the manager, or a review on its pull request. With none of these it stops and waits; it does not poll on a short timer.
 - A session that waits on something slow (a CI run, a long fuzz pass) checks back at the pace of that thing, not every few minutes.
