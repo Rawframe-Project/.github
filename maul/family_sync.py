@@ -19,6 +19,8 @@ AGENTS.md). With no library named, --check checks every library found.
 --ref takes the family as this repository holds it at a tag or commit
 instead of as the checkout holds it, so a library checks against the
 release it pins (`--ref v0.0.58`) whatever this checkout has moved on to.
+Modes are read from git's index, so --write stages each file it writes,
+with its mode, when the library is a git checkout.
 """
 
 import argparse
@@ -154,6 +156,10 @@ def sync(source, library, info, base, write):
             with open(path, "wb") as f:
                 f.write(content)
             os.chmod(path, 0o755 if runs else 0o644)
+            # The check reads the mode from git's index, and on Windows the
+            # chmod above sets none, so the file is staged with its mode.
+            if os.path.exists(os.path.join(base, ".git")):
+                subprocess.run(["git", "-C", base, "add", f"--chmod={'+' if runs else '-'}x", "--", rel], check=True)
             print(f"{library}/{rel}: written")
         elif current is None:
             print(f"{library}/{rel}: missing")
