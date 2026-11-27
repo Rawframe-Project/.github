@@ -1,0 +1,4 @@
+# Every text file is stored and checked out with LF, whatever the
+# checkout's core.autocrlf; the family files are copied into the libraries
+# as they are.
+* text=auto eol=lf
