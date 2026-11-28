@@ -24,8 +24,15 @@
 # starts from the committed seeds builds from public sources, so its
 # seed would let anyone replay the finding, and the file name is the
 # SHA-1 of the input, which gives a short input away. Both stay in the
-# log on the machine that ran it; the maintainers reproduce a finding by
-# fuzzing the target locally.
+# log on the machine that ran it.
+#
+# So that the maintainers can still replay a finding from CI, the
+# finding's files and the target's log are sealed with age to the
+# maintainers' key in tools/fuzz_recipient.txt, as
+# out/fuzz-sealed/NAME.tar.age, which a fuzz job uploads as an artifact
+# when it fails. Only the private key, which never leaves the
+# maintainers' machine, opens it. Without age on the path the finding is
+# not sealed and the report says so.
 #
 # The report goes to out/fuzz-reports/NAME.txt, written fresh by each
 # run, and the script prints an error line and exits 1; it exits 0 when
@@ -111,5 +118,19 @@ head=$(sed -E '/^(MS: [0-9]|0x[0-9a-fA-F]{1,2},|artifact_prefix=|Base64: )/,$d' 
   # head may close the pipe early on a long report; that is not an error.
   sed -n '/^==[0-9]*== *ERROR: /,/^SUMMARY: /p' <<<"$head" | head -n 80 || true
 } >"$report"
+recipient=$(dirname "$0")/fuzz_recipient.txt
+sealed="$out/fuzz-sealed/$name.tar.age"
+if command -v age >/dev/null && [ -s "$recipient" ]; then
+  mkdir -p "$out/fuzz-sealed"
+  if { find "$crashes" -maxdepth 1 -type f -newer "$stamp" -print; echo "$log"; } |
+    tar -cf - -T - 2>/dev/null | age -R "$recipient" -o "$sealed"; then
+    echo "sealed for the maintainers: $sealed" >>"$report"
+  else
+    rm -f "$sealed"
+    echo "not sealed: age failed" >>"$report"
+  fi
+else
+  echo "not sealed: age or $recipient is missing" >>"$report"
+fi
 echo "::error::$name found something"
 exit 1

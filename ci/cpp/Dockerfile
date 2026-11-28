@@ -8,7 +8,8 @@ ARG DEBIAN_FRONTEND=noninteractive
 # Set by the builder: amd64 or arm64. The image is built for both.
 ARG TARGETARCH
 
-# Compilers, the build tools, shellcheck for the shell scripts, and the
+# Compilers, the build tools, shellcheck for the shell scripts, age to
+# seal a fuzz finding for the maintainers, and the
 # libraries the families' optional components and tests link: X11, Wayland
 # and XCB for windows, ALSA, Pulse and PipeWire for audio, lavapipe and the
 # validation layers for Vulkan, HarfBuzz and ICU as test oracles, a D-Bus

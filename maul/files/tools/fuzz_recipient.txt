@@ -1,0 +1,3 @@
+# The maintainers' age public key. tools/fuzz_target.sh seals a fuzz
+# finding to it; the private key stays on the maintainers' machine.
+age1cpfjypt8mn72jz2g0276a2xp3gge3uda0lv9pq6l6et46kk00cgsxa8ze0
