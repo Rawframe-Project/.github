@@ -88,7 +88,7 @@ jobs:
     # daemon a test stops is gone rather than a zombie that still looks
     # alive. zizmor reads the null of the macOS and Windows branch as an
     # unpinned image.
-    container: ${{ startsWith(inputs.runner, 'ubuntu') && fromJSON('{"image":"ghcr.io/rawframe-project/ci-cpp:2026.10.7@sha256:08c846597243dc000c83d6c008d078a8c3fabf8633d83963d46c0e6d02c2577e","options":"--init"}') || null }} # zizmor: ignore[unpinned-images]
+    container: ${{ startsWith(inputs.runner, 'ubuntu') && fromJSON('{"image":"ghcr.io/rawframe-project/ci-cpp:2026.11.28@sha256:520083ea5bca308d4a29af7af7d14231d666b1bebbecec307086b548251ce61a","options":"--init"}') || null }} # zizmor: ignore[unpinned-images]
     permissions:
       contents: read
     steps:
