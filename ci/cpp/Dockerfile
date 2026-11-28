@@ -19,7 +19,7 @@ ARG TARGETARCH
 # coverage, and what headless Chrome needs to launch.
 RUN apt-get update -q \
     && apt-get install -y -q --no-install-recommends \
-        ca-certificates curl git git-lfs xz-utils unzip file \
+        ca-certificates curl git git-lfs xz-utils unzip file age \
         cmake ninja-build pkg-config ccache make python3 python3-pip python3-venv shellcheck \
         clang-20 clang-tidy-20 lld-20 llvm-20 libclang-rt-20-dev libclang-rt-20-dev-wasm32 wasi-libc \
         gcc-14 g++-14 \
